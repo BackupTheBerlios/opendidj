@@ -1,0 +1,92 @@
+JFFS2 NAND support:
+
+To ebable, use the following #define in the board configuration file:
+
+#define CONFIG_JFFS2_NAND 1
+
+Configuration of partitions is similar to how this is done in  U-Boot
+for  JFFS2  on top NOR flash. If a single parition is used, it can be
+configured using the following #defines in the configuration file:
+
+#define CONFIG_JFFS2_NAND_DEV 0			/* nand device jffs2 lives on */
+#define CONFIG_JFFS2_NAND_OFF 0			/* start of jffs2 partition */
+#define CONFIG_JFFS2_NAND_SIZE 2*1024*1024	/* size of jffs2 partition */
+
+If more than a single partition is desired, the user can define a
+CFG_JFFS_CUSTOM_PART macro and implement a
+
+	struct part_info* jffs2_part_info(int part_num)
+
+function in a board-specific module. An example of such function is
+available in common/cmd_jffs2.c
+
+The default configuration for the DAVE board has a single JFFS2
+partition of 2 MB size.
+
+Some observations
+-----------------
+
+fsload is really slow on our LF1000/ME2530 ARM926EJS.  After some googling, I
+believe this is normal.  Let's find out why and try to fix it:
+
+-- First go read the source code until you understand how NAND partitions work.
+It's not really documented anywhere.
+
+-- By inspection of the fsload command, the steps are as follows:
+
+1) Scan JFFS.  This means we scan through THE ENTIRE NAND, 4-bytes at a time,
+   looking for a JFFS2 header.  When we find one, it's either an INODE, a
+   DIRENT, a CLEANMARKER, or PADDING.  If it's an INODE, we verify CRCs on the
+   60-byte header and the compressed data, then add it to our "frag" list.  If
+   it's a DIRENT, we verify a CRC on the header and the DIRENT name and add it
+   to our "dir" list.  If it's a CLEANMARKER or PADDING, we skip it.  Finally,
+   we advance over the entire node and continue scanning 4-bytes at a time.
+
+   All of the reads from NAND happen through a 512*16 byte cache.  This is
+   probably legacy code that should really be ERASE_BLOCK_SIZE*16.  A cache miss
+   means that we fill the entire cache, even if the read request was for just a
+   tiny bit.
+
+   Optimization ideas: Can we use the OOB to skip entire erase blocks?  Is the
+   caching actually working for us?  (I doubt it.  On a scan, we are by
+   definition touching everybody once.)  Do we know something about the
+   alignment of JFFS2 headers?  Can they really be anywhere?  Does it make sense
+   to skip INODE blocks on the first pass and only create the DIRENT list?
+
+2) Search for the filename in the dir list so we can learn the inode of our
+   file.  For each directory name in the file name, we traverse the entire dir
+   list looking for the newest version (ahh.  Journalling.)  Finally, we find
+   the inode that contains our file in the dirent with the proper parent inode
+   and file name.  Once we find it, if it is a sym link, we repeat all of this
+   until we resolve it.
+
+   Optimization ideas: Is this step taking much time?  The caching applies to
+   this step too.  It's probably not helping.  Perhaps if we sorted the dirents
+   somehow when we scan this would help (but does complicating the scan make
+   sense)?  Try turning on CFG_JFFS2_SORT_FRAGMENTS.
+
+3) Finally, we read the file.  This entails walking through the entire fragment
+   list looking for matching fragments and writing them into the destination
+   buffer.  The code is not very smart about versions; it will write any version
+   out regardless of whether it is the latest version.  Incidentally, the code
+   seems to have a bug; the last fragment whose inode number matches gets
+   written out regardless of whether it is the latest version.  We should
+   probably only write out if the current inode's version is greater.
+
+   If we turn on sorting, we're not really saving much.  We still walk through
+   every frag looking for the inode with the latest version.  The only
+   difference is that, because the inodes are sorted by version, we don't get
+   the buggy behavior from before.
+
+   Optimization ideas: Can't we order the fragments by inode in a hash table
+   instead when we do the scan?  Because we aren't writing, we could hash only
+   the latest version and throw out the rest.  frags could be hashed based on
+   their inode so that if we know the inode number, we dramatically reduce the
+   number of items we have to scan.  Similarly, the dir list could be hashed
+   based on parent inode.  This way, we could start looking for a file name's
+   directory not by traversing THE ENTIRE DIR LIST, but instead by traversing
+   only the dirents with the same parent inode.  Duh.
+
+Hey!  I have an idea.  Fundamentally, LinuxDist is read only.  Brio will have to
+read and write files, but LinuxDist will not.  So why don't we use cramfs
+instead of jffs2?  Are people using cramfs on NAND?

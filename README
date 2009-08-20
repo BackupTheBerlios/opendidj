@@ -1,0 +1,144 @@
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+o
+o Welcome to the Linux system guts of the Lightning board
+o
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+
+
+Introduction
+------------
+
+In this directory you will find the Linux code for the Lightning board.  The
+output of building everything in this directory is the following:
+
+-- lightning-boot.bin: This is the Lightning low-level bootloader that lives in
+   the first sector of the NAND Flash.  It loads the Linux kernel from the
+   appropriate 'kernel' partition and sets up its command line.  It can also,
+   during development, boot other images (such as u-boot).  See the 
+   lightning-boot directory for build and debug instructions.
+
+-- uniboot.bin: This is the older, and now deprecated low-level bootloader.
+   It simply loads a program from elsewhere in NAND and executes it.  Usually 
+   this program is either u-boot or the Linux kernel.  See the uniboot 
+   directory for instructions on building uniboot.
+
+-- u-boot.bin: This is the second-stage bootloader (for development).  
+   See u-boot-1.1.6-lf1000 for details on how to build u-boot.
+
+-- uImage (or some other Linux image): This is the Linux kernel image.  It is
+   built from the kernel source in the linux-2.6.20-lf1000 directory.  The 
+   kernel image is wrapped up into a packed binary image (kernel.bin), see the
+   scripts directory (README, make_kernel.py) for more information.
+
+-- Complete Root File System: This is the root file system for the Lightening
+   board.  It is built in the directory pointed to by the ROOTFS_PATH
+   environment variable (see below).  Note that the Complete Root File System
+   is comprised entirely of packages.  Each package is contained in its own
+   subdirectory packages.  Please see the README in the packages directory for
+   instructions on how to add new packages.  Please also note that the Complete
+   Root File System contains many headers and extra functions that are not
+   meant to be embedded on the final target.  So the Complete Root File System
+   can be mounted over NFS by the target, but is not meant to be written to
+   NAND.
+
+-- Embedded Root File System: The Embedded Root File System is a jffs2 image
+   that is meant to be written to the NAND flash of the target board.  In your
+   day-to-day life as a developer you will probably not build this filesystem
+   regularly.  It will be build by whomever is releasing the LinuxDist
+   package.  The Embedded Root File System is a subset of the Complete Root
+   File System.  It does not contain headers and various debug facilities.
+
+Setting up your environment
+---------------------------
+
+I assume you have a suitable cross compiler.  We're currently using the
+scratchbox arm-gcc4.1-uclibc20061004 compiler, which should available from
+apt-get if you are using a Debian system.
+
+Various environment variables affect how and where the package components are
+built.  These variables have certain default values:
+
+   Variable                   Description
+
+   PROJECT_PATH               This is the absolute path to the directory where
+                              this README lives.  It defaults to
+                              ~/Brio2/LinuxDist/
+
+   CROSS_COMPILE              Cross compiler prefix.  This defaults to
+                              arm-Linux-.  Be sure the compiler is in your
+                              path.
+
+   ROOTFS_PATH                Prefix where the Complete Root File System or
+                              Embedded Root File System is built.  This
+                              defaults to /home/lfu/nfsroot.
+
+   TARGET_MACH                Name of the board that you are building for.  The
+                              default is ME_LF1000 (the LF1000 Development
+                              board).  This is used by the release scripts as
+                              well.
+
+Release-specific environment variables:
+
+   RELEASE_PATH               This is the absolute path to the directory where
+                              releases will be placed.  The default is to place
+                              them in /tmp/lightning
+
+Building the Complete Root File System
+--------------------------------------
+
+When you are first getting started with the Linux Dist package, and
+occasionally as your root file system becomes messy and inconsistent, you will
+want to build the Complete Root File System from scratch.  Here's how:
+
+0) svn update!
+
+1) Invoke the build script:
+   
+   $ cd $PROJECT_PATH/scripts
+   $ ./make_rootfs.sh
+
+   If you wish to build Brio into your rootfs, you may pass the -b option.  If
+   you wish to do a completely clean build, you may pass the -c option.
+
+2) After doing this once, you will probably want to dive in and work on just
+   one package.  You need not rebuild the entire root fs every time you wish to
+   deploy.  Instead, you can just invoke the package's install script.  For
+   example, if you are working on the kernel, you can do the following:
+
+   $ cd $PROJECT_PATH/linux-2.6.20-lf1000
+   $ ./install.sh
+
+   This will invoke make zImage and install any modules in the rootfs.
+
+See $PROJECT_PATH/packages/README for details on how the install.sh scripts work.
+
+Making Releases
+---------------
+
+Releases should be quick and painless.  Here's how to do it:
+
+1) All code that is going to be in the release must be in svn.  After this
+   happens, declare a code freeze.
+
+2) Invoke "svn update" to get all of the changes and do a test build.  Note the
+   svn build number.
+
+3) Update the major version in LinuxDist/packages/version/install.sh as
+   described at the top of RELEASE-NOTES.
+
+4) Update the Release notes.  Note that the build number should be the current
+   svn build number reported by svn info.
+
+5) Run the script "make_release_all.sh" with the "-c" flag for a clean build.
+   At this time, this causes "make_release.sh" to be run for several boards,
+   with or without the "-u" (u-boot) option.
+
+6) commit your changes to the version package and release notes.
+
+7) Test the release!
+
+8) Ship.
+
+TODO
+----
+

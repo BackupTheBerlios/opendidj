@@ -1,0 +1,1086 @@
+Lightning Linux Distribution
+
+About the version number:
+
+W.X.Y-Z
+^ ^ ^ ^
+| | | |
+| | | +-- This is the svn build number.  It increases monotonically.
+| | +---- This is the minor number.  We increment it after team-wide releases.
+| +------ This is the major number.  We increment it after LF-wide releases.
++-------- This is the release number.  We increment it after product releases.
+
+The file /etc/version on the target contains the version number of the release
+on the target.
+
+=====================================================
+LinuxDist Version 1.0.3-3188 21 Mar 2008
+=====================================================
+
+-- Added missing CONFIG_MTD_NAND_LF1000_PROF
+
+-- Conditionally mount /Didj FAT volume only if needs_repair flag is not set.
+
+-- Brazenly refusing to mount if /flags/needs_repair found
+
+-- Repair inverted /flags/needs_repair test
+
+=====================================================
+LinuxDist Version 1.0.2-3174 19 Mar 2008
+=====================================================
+-- Updated meta.inf with correct part number 152-12113.
+
+-- Add size check case for LF_NEEDS_REPAIR setting.
+
+-- Added code to support LF_SET_SETTING IOCTL for LF_NEEDS_REPAIR, as suggested by Judah.
+
+-- Merged updated meta.inf with PackageID field from GM0 branch.
+   -gThis line, and those below, will be ignored
+      M    scripts/make_lfps.sh
+
+-- Fix ioctl retrieval of needs_repair size.  Fix ioctl setting needs_repair flag.
+
+-- Add update_needs_repair() to copy from usbgadget driver to /flags/needs_repair
+
+-- Missing $ in -e NEEDS_REPAIR_FILE
+
+-- Fix to allow .zip too
+
+-- Added device driver for IDCT Macro Block Decoder registers for Video decoding.
+
+-- ttpro #1809 fix.  Check that system is on external power or battery is above
+   4.5 volts.
+
+-- Fixed check for external power.
+
+-- Add new nand profiler.  Config with MTD_NAND_LF1000_PROF and then you can
+   cat /sys/devices/platform/lf1000-nand/write to get raw statistics on
+   min/mean/max access times in 4.593MHz ticks.   Will wrap after 15 minutes.
+   Use profnand.c to format in human readable seconds.
+
+-- Help with reading nand profiling data from sysfs
+
+-- Remove unneeded power check.
+
+=====================================================
+LinuxDist Version 1.0.1-3144 14 Mar 2008
+=====================================================
+-- Added install scripts on both file systems in post install
+
+-- Bumping up version to reflect recent GM release.
+
+-- Added doc for -a manifest.  Fix vunerability to embedded ^M in manifest
+
+-- Now able to handle DOS line endings (^M); previously failed to find $PKG file
+
+-- Added pmap package, enabling it in the dev board build so that it can be used
+   to debug.
+
+-- Fixed TTpro LitBLT#1717, where popping cart during update made unit not
+   power down.  Problem was read failure not detected by unzip, and unit
+   kept rereading; unzip never ended and unit never shut down. An
+   unsigned value was used to hold "safe_read" return value, which should
+   have been signed to detect errors.
+
+-- Added configuring Base unit to be USB unlocked on first boot only so USB
+   method can be used to update the devices. This configuration only happens
+   when firmware is flashed using the ATAP version 012.
+
+-- Fixed deletion of temporary directory created while validating
+
+-- Removed /Cart/Base/Brio/lib from LD_LIBRARY_PATH, per decision to only update Brio
+   via Didj base upgrade mechanisms. (TTP# 1762)
+
+-- Same sound, lowered 3dB, to remove 'crackle' reported in TTPro #1794
+
+-- Erased flash if failed to mount
+
+-- First pass at proposed fsck.vfat change. Adding /flags/needs_repair flag
+   indicating fat32 error. Pass fsck.vfat check status to g_file_storage driver
+   on load, so it's available via ioctl to PC.
+
+-- Added PENDING_REPAIR_STATE to Didj state machine, conditional on
+   /flags/needs_repair result of fcsk.vfat check. Pops up new connect-to-PC screen,
+   and waits for USB connection or power down. 
+
+=====================================================
+LinuxDist Version 0.32.0-3011 19 Feb 2008
+=====================================================
+
+-- Adding monitor-ctl.c, a utility for inspecting and/or setting monitored timers
+   from the command line. (This may be useful for debugging)
+
+-- Updated power down audio clip
+
+=====================================================
+LinuxDist Version 0.31.0-3004 14 Feb 2008
+=====================================================
+
+-- Fixed TFS loading problem in lightning-boot: this bug can only be triggered 
+   by having the first block of a TFS partition marked bad.  In this case, the 
+   TFS load would still fetch the summary correctly, but the data counter was 
+   wrong.
+
+-- Added power down sound effect
+
+=====================================================
+LinuxDist Version 0.30.0-2992 13 Feb 2008
+=====================================================
+
+-- Fixed a bug where init.d/mass_storage gets fooled if kernel reorders
+   UBI volumes.
+
+-- Included copying lfpkg and mkbase.sh into the mfg tools directorys so they
+   get distributed with every release
+
+-- Added unmount all /opt partitions before erasing them when making an ATAP
+
+-- Decoupled the payload firmware from the Atap's firmware.  Included the proper
+   firmware for making the ATAP.
+
+-- Updated lfpkg so you can use multiple instances of the script without
+   it stepping on itself
+
+-- Set date to Jan 1, 2008 if year less than 2008 or greater than 2030.
+
+-- Updated real-time clock after changing date
+
+-- Reported properly battery state over USB
+
+=====================================================
+LinuxDist Version 0.29.0-2939 08 Feb 2008
+=====================================================
+-- Put back extra parsing for manufacturing, conditionally.  you must have 
+   /flags/mfcart to use those features.
+
+-- Defined names for power event payload, no functionality changes, just 
+   documentation
+
+-- Added How-To's for NAND game to OTP game conversion, and for putting
+   firmware upgrades onto cartridges
+
+-- Updated postinstall so package can install from ATAP or from native base unit
+
+-- New boot screen (apprently the difference is adding 'the' before 'Parent 
+   Guide')
+
+-- Fixed a bug where init.d/mass_storage gets fooled if kernel reorders
+   UBI volumes.  This happens only if 1) /flags/mfcart exists, 2) you
+   have just flash_eraseall /dev/mtd7 and rebooted. 
+
+
+=====================================================
+LinuxDist Version 0.28.1-2922 05 Feb 2008
+=====================================================
+-- Fixed permissions on FW update script
+
+-- Built PNG library with fixed-point support.
+   Test app needed to avoid gamma functions with floats
+
+=====================================================
+LinuxDist Version 0.28.0-2913 05 Feb 2008
+=====================================================
+-- Util to check and perform Brio and non-firmware*.lfp updates from cartridge.
+
+-- Make case of no cart return much faster
+
+-- Added pkupdate-cart, fwcheck-cart, blcheck-cart to install
+
+-- Checking in batprofile package.  This is a simple script for 'profiling' the
+   way that batteries discarge by adjusting backlight brightness.  It creates a
+   CSV log file. No need to install it by default.
+
+-- Change ioctl DPC_IOCQBACKLIGHTVIRT so returns the virtual backlight setting,
+   including negative numbers. (Can't pass negative numbers back as return value).
+
+-- Added explicit optimizations for ARM, per LightningCore version.
+
+-- Add -a manifest to create manifest files
+
+-- Make manifest use fill version number
+
+-- Added self updating of mfg scripts if new files found during bootup
+
+=====================================================
+LinuxDist Version 0.27.0-2877 01 Feb 2008
+=====================================================
+-- Load the boot splash after a usable kernel is found. Before, we loaded it as
+   soon as we've loaded a partition summary, but in the event that data is 
+   corrupt, we don't 'know' until the kernel header is inspected. In rare cases,
+   this causes us to show junk for the splash screen. Moving the splash after a
+   good kernel is found makes it much less likely that we'll load garbage. This
+   adds some delay to ON->screen time, but hopefully this delay is minimal enough
+   to not cause a usability problem.
+
+-- Refactored volume control to fix audio muting.  Separated 'mute' logic from
+   'volume' control.  Changed sysfs 'volume' into separate devices.
+
+-- Added new utility to check and install cart updates in /etc/init.d
+   Requires a "manifest.inf" file on cart with precomputed
+   contents to speed things up a bit.
+
+=====================================================
+LinuxDist Version 0.26.0-2871 01 Feb 2008
+=====================================================
+-- Add support for UNIX pipes
+
+-- Changed meta.inf file to be compatible with new OmegaTerm
+
+-- Checked for presense of external power on LF_LF1000 during battery monitoring 
+   task
+
+-- Changed AUDIO_NUM_FRAGS up from 2 to 8 to eliminate audio underruns on
+   reads from OTP cartridges.  They can randomly have very long latency
+   on their reads.  (This change was not needed for NAND cartridges,
+   which are about 2x faster in general.)
+
+-- TT#1249: New art from Anthony G
+
+-- TTP#1335 was fixed in previous checkin, but it was left a printk--removed.
+
+-- Skipped main app launch if USB is connected on startup
+
+-- Used sysfs hook exclusively to determine cart. type.  This makes bootup faster and ensures that we follow
+   what the driver detects -- the driver gets its information from the cart. ID pins sampled by the 
+   bootloader right after power on.  This removes the 'base' cart. type feature because that's not 
+   something the driver provides.  
+
+-- Switched to oprofile 0.9.3 (fixes ARM EABI support), update workaround patch for
+   new version and clean up uclibc patch
+
+-- Checking in updated oprofile binaries (and assorted files for completeness)
+
+
+=====================================================
+LinuxDist Version 0.25.0-2832 30 January 2008
+=====================================================
+
+This is a candidate release for Brio integration.  With this release, you must
+update your Brio as well.  This release includes updates to the rootfs, kernel,
+and bootloader.  The bootloader update is not required but recommended.  The
+kernel, rootfs, and Brio update is required.  Previous versions of LinuxDist
+will not work with an updated Brio, nor will this release work with a previous
+Brio.
+
+-- The Application will no longer be launched if the unit boots with USB 
+   already connected.
+
+-- Match backlight settings between the bootloader and Linux, work around
+   backlight-related differences between board versions.
+
+-- Fixed CPU clock setting bug found by hardware folks.  The CPU and bus clocks
+   will now initialize to expected rates.
+
+-- More features for cartridge-based update.
+
+-- Power and Application management refactor: implemented a user-space 
+   application monitoring daemon and moved the application shutdown timers 
+   there.  Cleaned up the driver side to provide power events.  Simplified the
+   runtime bhavior implementation.
+
+-- 'Critical Battery Level' notification should now get to the Brio application
+   and cause a clean shutdown from user space.
+
+-- Cleaned up runtime behavior by creating generic 'display_screen' and 
+   'killmainapp' utilities.
+
+=====================================================
+Version 0.24.0-2787 28 January 2008
+=====================================================
+
+-- Improved file system checking and cartridge handling.
+
+-- Added more low-level tests for buttons and headphone jack.
+
+-- Added initial features for cartridge-based updates.
+
+=====================================================
+Version 0.23.0-2729 22 January 2008
+=====================================================
+
+-- Fixed an initialization problem in the NAND driver which caused serialization
+   problems in the MTD layer
+
+-- Fixes to LF1000 video scaler. Vertical up-scaling needs filter enable bit set.
+   Layer sleep bits need to be set on enable, not cleared.
+
+-- Moved the OGL stuff down on the dev board to increase system mem.
+
+-- Support OTP/ROM carts over USB as read only with "ro=" flag to g_file_system.
+
+=====================================================
+Version 0.22.0-2676 17 January 2008
+=====================================================
+
+-- Created a flash erase function in the ATAP scripts that will only erase
+   prg_ partitions (all but the Manufacturing Data partition so we can preserve
+   serial number and logs). Updated splash screen with versions to reflect changes.
+   Cleaned up output.  
+
+-- Added hysteresis to battery state calculation, preventing oscillation between
+   normal and low battery.
+
+-- Adjusted max headphone and speaker levels.
+
+-- Mix left and right audio channels for speaker output.
+
+-- Re-arranged the frame buffers and other graphics memory to move
+   the Form Factor memory from 16MB to 18MB
+
+-- Updated /sys/devices/platform/lf1000-audio/output to show the current audio output,
+   taking into account the board_version.
+
+=====================================================
+Version 0.21.0-2612 10 January 2008
+=====================================================
+
+-- An ioctl for asking a pin's current mode was added to the GPIO driver,
+   along with example code in gpio-control.  This is to help manufacturing tests.
+
+-- Adjusted total volume down 3 dB in the Cirrus Logic chipset.
+
+-- Mix left and right channels out the speaker.  A side effect is that the left
+   and right channels get mixed in the headphones as well.
+
+=====================================================
+Version 0.20.0-2591 09 January 2008
+=====================================================
+
+-- Fixed fsck.vfat utility.  It was broken due to compiler migration.
+In previous release, it did not work, and users may have experienced
+FAT32 fs panics as a result.  This is fixed now.
+
+-- Oprofile support restored after compiler migration.
+
+-- Work around a bug in the power state management that lead to rare
+but unexpected shutdowns.
+
+-- Shrink max size of ramdisk from 2MB to 128kB.  Note that the
+ramdisk GROWS to the max size.  It is not allocated at boot-time to be
+this size.
+
+-- Added USB disconnect sound effect and fixed USB connect sound effect.
+
+-- Volume Slider mutes speaker and headphone
+
+-- Right channel sound sent to speaker
+
+
+=====================================================
+Version 0.19.1-2553 05 January 2008
+=====================================================
+
+-- Fix to volume and battery level driver.
+
+=====================================================
+Version 0.19.0-2525 03 January 2008
+=====================================================
+
+IMPORTANT NOTE: This release uses the Ridge Run compiler, not the scratchbox
+compiler.  These two compilers have different ABIs and are not compatible.  If
+you are building code that is expected to run on this platform, you must update
+to the new compiler.  See the following link for details on obtaining and
+installing the Ridge Run compiler:
+
+http://emma.leapfrog.com/display/BRIO/Migration+from+the+scratchbox+to+the+RidgeRun+compiler
+
+Changes:
+
+-- Updated default runtime behavior to address some bugs introduced in the
+previous version.
+
+-- Updated default runtime behavior screens in response to marketing request
+
+-- Problem where volume adjustment results in unit crash is known, but not
+resolved.
+
+=====================================================
+Version 0.18.0-2508 20 December 2007
+=====================================================
+
+IMPORTANT NOTE: This release contains a new bootloader.  This bootloader will
+not boot older firmware.  Further, older bootloaders will not boot this
+firmware.  You must update both the bootloader and the firmware either using the
+ATAP cartridge method, or using OmegaTerm as described at the following link:
+
+http://emma.leapfrog.com/display/BRIO/Installing+a+LinuxDist+Release
+
+Changes:
+
+-- Various manufacturing enhancements including package install validation.
+
+-- Fixed boot-time blue flash on screen.
+
+-- Revised default runtime behavior to avoid known problem with 3D hardware.
+That is, the AppManager can never be invoked twice without a reboot.  So,
+instead of relaunching the AppManager (i.e., after USB disconnect), the device
+now shuts down.
+
+-- Increased measures to prevent file system panic problems.
+
+-- delivered lfp packages comply with new requirements from middleware team.
+
+-- Fix problem that was preventing USB connect sound from making it to the
+device's speaker.
+
+=====================================================
+Version 0.17.1-2428 13 December 2007
+=====================================================
+
+-- USB is being enabled if device is booted with the USB cable plugged in and
+   the AppManager is not present or crashes (this is a pretty minor case)
+
+-- Modified mkbase.sh and validate_all.sh to use stored checksum; renamed stored
+   checksum file for lightning boot to resolve problem with package vaildation.
+
+-- handle Dev v1.2 board hardware quirk at boot time by checking for 
+   /flags/speaker_reverse and issuing a "reverse headphone detect" when it's
+   found
+
+=====================================================
+Version 0.17.0-2420 13 December 2007
+=====================================================
+
+-- usbctl fails cleanly if driver is not loaded.
+
+-- added "front door" bootloader update capability.  It's proper use is documented
+   in the section "Installing a bootloader release automatically" at this link:
+   http://emma.leapfrog.com/display/BRIO/Installing+a+LinuxDist+Release
+
+-- Added a boot time fsck on FAT32 partitions when shutdown is not clean.
+
+-- Audio filter / gain changes (adjustments to Cirrus Logic registers)
+
+-- Implement Backlight changes for EP1, use board id to discern settings 	  	
+
+-- Implement headphone detect changes for EP1, use board id to discern settings 
+
+-- Added S52flash script to flash a dev board or unit automatically
+
+-- Added Base2ATAP-xxx.lfp package to automatically configure a pre-programmed
+   base unit to make automated ATAP cartridges
+
+-- Added Base2Cart-xxx.lfp package to automatically configure a pre-programmed
+   base unit to make consumer NAND cartridges
+
+-- Adjusting the speaker/headphone switch setting from the command line
+
+=====================================================
+Version 0.16.0-2361 05 December 2007
+=====================================================
+
+-- Minor audio tuning per Elise's request
+
+-- Improvements to custom USB SCSI commands.  Malformed CBWs cause explicit
+   failure in host.
+
+-- Added sound effect to usb connect event in default runtime behavior.
+
+
+=====================================================
+Version 0.15.1-2310 28 November 2007
+=====================================================
+
+-- Adding a backdoor means for recovering a development
+   cartridge.  It is documented in the "Cartridge Behavior" section of
+   http://emma.leapfrog.com/display/BRIO/Lightning+System+Specification
+
+-- Fixing the /dev/power driver, TTPRO bug LitBLT:#353.
+   The driver now correctly reports battery status changes to Brio.
+
+=====================================================
+Version 0.14.0-2280 24 November 2007
+=====================================================
+
+-- Minor fix to USB code
+-- Improved mkbase.sh script
+-- Enable clock speedup patch now that it has been verified on the Form Factor
+   board
+
+=====================================================
+Version 0.13.0-2267 20 November 2007
+=====================================================
+
+-- Fix md5 sum support in nanddump
+
+-- Implemented watchdog timer
+
+-- Added fsck after AppManager crash to reduce liklihood of corrupt fs.
+
+=====================================================
+Version 0.12.0-2230 14 November 2007
+=====================================================
+
+-- Improvements to backlight, brightness, and contrast support
+
+-- Various clean up items in the lfpkg and mkbase utilities
+
+-- Chapter 9 compliance on USB
+
+=====================================================
+Version 0.11.0-2181 06 November 2007
+=====================================================
+
+This release is identical to 0.11.0-2178 and includes a fix to be more robust 
+against incorrectly formatted unit serial numbers.
+
+=====================================================
+Version 0.11.0-2178 06 November 2007
+=====================================================
+
+This release supports both the form factor and dev boards.  The usual
+instructions apply.
+
+Changes:
+
+-- The kernel has a new name.  This is only a problem if your rootfs and kernel
+disagree about the name, which is only the case if you are using NFS and you
+update things in the wrong order.  The right order if to first update the
+firmware, then update the NFS root.
+
+-- The root file system is now READ ONLY by default.  This is probably going to
+piss some people off, but we have to get through any growing pains before
+everything can be finalized.  If you must make your rootfs r/w, you can do so
+with the following command:
+
+# mount -o remount,rw /
+
+Note that if /flags/mfcart exists, the rootfs will be remounted r/w for you, so
+manufacturing team should not have any trouble.  Also, if you boot from NFS,
+the rootfs will be r/w.
+
+-- /tmp is now a 2MB ramdisk instead of being part of the rootfs.  If you are
+unpacking huge files, or dumping a ton of log messages to /tmp, you may run out
+of space.  You have been warned.
+
+-- Implemented custom scsi commands for serial number and ok-to-disconnect
+command.  Also fixed get-battery command.
+
+-- USB descriptors updated to reflect final product
+
+-- The /mfgdata (Manufacturing Data) partition is mounted and initialized if
+needed.  It is currently empty by default.  In normal operation, this parition
+is mounted read-only, in manufacturing mode it is mounted read-write as per the
+Lightning Specification.
+
+-- The Board ID can be inspected at any time by reading the following file:
+/sys/devices/platform/lf1000-gpio/board_id
+This four-bit (one hex digit) ID is hard-wired on the boards.  Currently, the
+ID is 0 for Development and Form Factor boards and 3 for the upcomming EP1 
+board.  It is expected that this file is read and the Board ID is used in 
+generating the device serial number during the manufacturing process.
+
+-- Some minor bugs are fixed including the splash screen alignment in the 
+bootloader and the backlight now operates correctly on Development 1.2 and
+Form Factor boards.  Backlight control is disabled on Development 1.1 boards.
+The bootloader 'latches' power sooner to make the device easier to power on.
+
+=====================================================
+Version 0.10.1-2104 30 October 2007
+=====================================================
+
+Same as 10.0 except it has a small fix to the install scripts.  Also, the
+speaker-mute-when-headphones-plugged-in feature on rev 1.2 the development
+boards only works when the headphones are plugged in half way.  This is a known
+bug.
+
+=====================================================
+Version 0.10.0-2101 30 October 2007
+=====================================================
+
+Audience: Internal release for Brio integration
+
+This release supports LF1000 development board and LF1000 Form Factor board.
+
+Changes:
+
+-- Some of the billboard screens are closer to their final verisons
+
+-- All deliverables come as .lfp packages.  If you need to access the guts of
+the packages, use the host_tools/unpack_release.sh script.
+
+-- lightning_install script is simplified.  By default, it doesn't need
+arguments.
+
+-- Speaker is muted when headphones are inserted.
+
+-- Implemented consumer-style automatic firmware update.
+
+-- Fixed a bug in the bootloader
+
+-- Core dump capability enabled in default configs.  This was a request from
+the content team.
+
+-- Added "backdoor" launcher to update firmware and bootloader
+
+=====================================================
+Version 0.9.1-2028 23 October 2007
+=====================================================
+
+Audience: Internal release for Brio integration
+
+Same as 0.9.0 but with some minor bug fixes
+
+=====================================================
+Version 0.9.0-2016 22 October 2007
+=====================================================
+
+Audience: Internal release for Brio integration
+
+This release supports the LF1000 development board and the LF1000 Form Factor
+board.
+
+Please find useful documentation here:
+http://emma.leapfrog.com/display/BRIO/Lightning+System+Specification
+
+Changes:
+
+-- Supports ample configuration options.  See the aforementioned document for
+details.
+
+-- Supports product-style default application behavior
+
+-- Updated bootloader with splash screen.  Splash screen loading is slow, and
+the alignment is slightly off.  These are known bugs.
+
+-- NAND partitions can not be shared by USB host and device simultaneously.
+Developers should use the usbctl command judiciously to avoid corrupting NAND.
+
+-- reboot and poweroff command line stuff works
+
+=====================================================
+Version 0.8.5-1956 17 October 2007
+=====================================================
+
+Audience: Internal release for testing on Form Factor boards.
+
+This release adds a bug fix relating to cartridge detection.  It is otherwise
+identical to 0.8.3.
+
+=====================================================
+Version 0.8.4-1942 16 October 2007
+=====================================================
+
+Audience: Internal release for testing and Brio integration by Dave for EMF
+testing.  This release is intended to be used on LF1000 form factor boards as 
+well as development boards.
+
+There are no major differences from 0.8.3 aside from building the Form Factor
+images.
+
+=====================================================
+Version 0.8.3-1937 15 October 2007
+=====================================================
+
+Audience: Internal release for testing and Brio integration.  This release is
+intended to be used on LF1000 development boards.
+
+-- This release comes with an unpack script.  It will place the nfsroot and
+   images where they should go in your system.  Run it like this:
+
+cd host_tools/
+TFTP_PATH=/path/to/tftp/dir ROOTFS_PATH=/path/to/nfsroot ./unpack_release.sh
+
+-- To flash this release to a board, boot into u-boot, close your serial 
+   terminal and run the following install script:
+
+cd host_tools/
+./lightning_install.py /dev/ttyS0 -e /tftpboot/lightning-boot.bin:0 \
+/tftpboot/kernel.jffs2:200000 /tftpboot/kernel.jffs2:1200000 \
+/tftpboot/erootfs.jffs2:400000 /tftpboot/erootfs.jffs2:1400000
+
+   Once that is done, open your serial terminal and reset or power cycle the
+   board.
+
+This release fixes some button, Ethernet, and battery level monitoring problems
+from the previous release and adds some features:
+- Watchdog API added to USB.
+- Enable LCD backlight on Form Factor and Development v1.2 boards.
+- Turn off peripheral power during shutdown.
+
+=====================================================
+Version 0.8.2-1917 10 October 2007
+=====================================================
+
+Audience: Internal release for testing
+
+=====================================================
+Version 0.8.1-1900 10 October 2007
+=====================================================
+
+Audience: Internal release for testing
+
+=====================================================
+Version 0.8.0-1888 10 October 2007
+=====================================================
+
+Audience: Internal release for testing
+
+=====================================================
+Version 0.7.2-1659 20 September 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+This release fixes DPC driver for the '2530 boards, otherwise it's identical to
+0.7.1-1638.
+
+=====================================================
+Version 0.7.2-1659 20 September 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+This release fixes DPC driver for the '2530 boards, otherwise it's identical to
+0.7.1-1638.
+
+====================================================
+Version 0.7.1-1638 20 September 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+This release is the same as version 0.7.0 except it has watchdog timer support.
+
+=====================================================
+Version 0.7.0-1631 19 September 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+Supports MagicEyes LF1000 (ME_LF1000) green development boards as well as the
+Leapfrog MP2530F (LF_MF2530) blue and brown development boards.
+
+Note: This release contains uniboot and u-boot images as well as a new NAND
+Flash layout.  You must erase and reflash your board for this release, using 
+the provided images.  There are LF1000 and MP2530F versions of each image as
+well as the nfsroot (root file system) directories.  Use the appropriate copies
+for your board's CPU.  See documentation on Emma for Flash layout and 
+reflashing instructions.
+
+Changes:
+-- USB mass storage supported, with in-NAND FAT32 file system via UBI.  The
+   board provides two USB disks: AppArea and BrioBase.  These names will likely
+   change as Brio integration continues.  A newly-flashed board, when booted
+   into Linux for the first time, will initialize these FAT32 areas.  This will
+   take a minute or two.
+-- By default, USB mass storage is not enabled.  Use usbctl to enable it.
+-- Audio 'clicks' during 3D engine use (ex: BrioCube demo) are fixed on the 
+   LF1000.
+-- Some GPIO Alive improvements for power management.
+-- Audio driver has optional statistics via sysfs.
+-- NAND Flash layout has been updated to move toward the desired final layout.
+-- Soft power-down is available for LF1000 boards: once in Linux, hold POWER 
+   (SW10 on the development board) and let go.  Power-on works as before.  Note
+   that jumper J47 should be installed, except when using lf1000_bootstrap.py
+
+=====================================================
+Version 0.6.0-1498 05 September 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+Supports MagicEyes LF1000 (ME_LF1000) green development boards only.
+
+Note: This release contains uniboot and u-boot.  These must be used as they
+have been changed for the LF1000.  See instructions on Emma or 
+release 0.0.4-636 for details on how to update.  The most automated update
+method (host_tools/lightning_install.py) can be used by booting your board
+into u-boot and then following the "automated install" instructions on Emma.
+The relevant re-flashing and setup instructions on Emma have been updated to
+reflect the ME_LF1000 board.
+
+Changes:
+
+-- Lots of LF1000-related changes.  Note that at this time the CPU and PLLs are
+   operated with their power-on initial settings (which are reasonable).  We
+   will reenable our own settings once the relevant code has been fixed.
+
+-- USB features have been updated, initial virtual FAT32 disk is provided over
+   USB.  At this time this is only usabe on Linux hosts and there are some 
+   issues with file visibility.
+
+-- Cartridge support is available at boot time.  This works on any board.  At
+   this time, the cartridge insertion interrupt is not specifically handled.
+
+-- Soft-power support for power-on is added.  This means that, on the ME_LF1000
+   board you should install a jumper at J47 after reflashing.  To power on the
+   board, press and hold the Power switch, SW10, until the backlight turns on.
+
+=====================================================
+Version 0.5.0-1261 13 August 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+Supports Blue and Brown LF2530 development boards.
+
+Note: This release contains uniboot and u-boot.  If you have not updated these
+during the last release, it is recommended that you update them to the newer 
+versions.  See instructions below with release 0.0.4-636 for details on how to 
+update.
+
+Changes:
+
+-- Lots of non-user-facing clean up related to forthcoming LF1000 processor
+   support, forthcoming USB features, forthcoming cartridge support.
+
+-- Added real time clock support through /dev/rtc0.
+
+-- Fixed volume wheel support.
+
+-- Added software debouncing of buttons.  We can increase debounce delay if
+   buttons are really bouncy.
+
+
+=====================================================
+Version 0.4.0-1073 30 July 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+Supports Blue and Brown LF2530 development boards.
+
+Note: This release contains uniboot and u-boot.  If you have not updated these
+during the last release, it is recommended that you update them to the newer 
+versions.  See instructions below with release 0.0.4-636 for details on how to 
+update.
+
+Note: The kernel image (zImage) in this release is larger than 1MB (0x100000),
+      keep this in mind when using u-boot to write the image to Flash.
+
+Changes:
+
+-- Driver cleanup, including brightness/contrast API improvements.
+-- ADC driver with volume control knob monitoring and initial hardware volume 
+   control in the audio driver.
+-- Real Time Clock driver added, with basic test.
+-- USB is now enabled and allows for enumeration testing/verification.  A 
+   simple vbus test is added.
+-- enabled sysfs, which will be mounted on init
+
+=====================================================
+Version 0.3.0-917 17 July 2007
+=====================================================
+
+Audience: Internal release for Brio integration.
+
+Supports both Blue and Brown LF2530 development boards.
+
+Note: This release contains uniboot and u-boot.  It is recommended that you
+update to these newer versions.  See instructions below with release 0.0.4-636
+for details on how to update these bits.
+
+Changes:
+
+-- Minor NAND support clean up
+-- Added proper audio enable for Brown revision of LF2530 board.
+
+=====================================================
+Version 0.2.1-854 10 July 2007
+=====================================================
+
+This is a quick re-release that incorproates some minor fixes to the LCD bring
+up.
+
+=====================================================
+Version 0.2.0-848 10 July 2007
+=====================================================
+
+Audience: Internal Lightening Firmware Team for external Brio release
+Target: Leap Frog LF2530 "blue" Board
+
+NOTE: You must be root to untar this file.  The reason is that it contains
+device nodes that only root can create.
+
+NOTE: This release does not contain uboot or uniboot images.  You may use the
+ones from the last release.
+
+Changes:
+
+-- SPI API in kernel is up and running.  It's used by the DPC driver to set the
+LCD contrast and brightness.  These features can be accessed through the dpc
+driver ioctls.
+
+-- Added lftest package.  Run "runall" on the command line to run LinuxDist
+unit tests.  The only test for now is the gpio test.
+
+-- NAND flash clean-up.  No user features available yet.
+
+-- Added ioctls to dpc driver to control backlight.
+
+-- Updated LCD timing.
+
+-- Use 3.2" LCD by default.  If you're using the 3.5" LCD, see
+/etc/init.d/modules for proper setting.
+
+=====================================================
+Version 0.1.0-759 02 July 2007
+=====================================================
+
+Audience: Internal Lightening Firmware Team for external Brio release
+Target: Magic Eyes ME2530 Board or Leap Frog LF2530 "blue" Board
+
+NOTE: You must be root to untar this file.  The reason is that it contains
+device nodes that only root can create.
+
+Contents:
+
+    uniboot-0.1.0-759.bin: Same as last release.  Included only for your
+    convenience.  You need not update the uniboot image.
+
+    u-boot-0.1.0-759.bin: Same as last release.  Included only for your
+    convenience.  You need not update the u-boot image.
+
+    zImage-ME2530-0.1.0-759: Kernel image for ME2530 "Navi" board.
+
+    zImage-LF2530-0.1.0-759: Kernel image for LF2530 board.
+
+    nfsroot-0.1.0-759: The root file system to be exported over nfs.
+
+    NOTE: See release notes from 0.0.4-636 for proper NAND layout and
+    installation instructions.
+
+Changes:
+
+    -- IMPORTANT NOTE: This release works with the 3.5" LCD and the ME2530 NAVI
+       board's LCD.  It does not work on the 3.2" LCD.
+
+    -- Preliminary OSS audio support implemented:
+       I2C userspace access and kernel API implemented.
+       DMA-driven I2S driver implemented.
+       OSS Fragments currently fixed at 2x4096 bytes.
+       Sample rate currently fixed at 44100Hz
+       Channels currently fixed at 2
+       Expect to see some unsupported ioctl message!
+
+    -- Native GDB support.  You can now use gdb natively on the target or you
+       can use gdbserver.  Note that to use native GDB, you will have to get
+       your source code over where the target can see it.  NFS mounting is
+       enabled for your convenience.
+
+    -- mplayer available for testing and verification purposes.
+
+    -- oprofile is up.  See http://oprofile.sourceforge.net/about/ to learn
+       about oprofile and
+       http://leapstudio-dev.leapfrog.local:8080/display/BRIO/Using+oprofile+to+get+performance+data
+       for a tutorial.  Expect improvements in future releases.  oprofile is
+       not supported on the ME2530.
+
+=====================================================
+Version 0.0.4-636 20 June 2007
+=====================================================
+
+Audience: Internal Lightening Firmware Team
+Target: Magic Eyes ME2530 Board or Leap Frog LF2530 "blue" Board
+
+Contents:
+
+	uniboot-0.0.4-636.bin: New uniboot image that supports both the ME2530 and
+	LF2530.  Another neat feature of this version of uniboot is that it boots
+	the linux kernel by default.  This makes for way faster boot time.  If you
+	need a u-boot prompt to, for example, upgrade your kernel you simply hold
+	down a magic key and reset the board.  Most of the keys on the ME2530 and
+	the LF2530 will work as magic keys.  The exception on the ME2530 is SW4.
+	The exceptions on the LF2530 are L_SHOULDER, R_SHOULDER, L-DPAD and R-DPAD.
+
+	u-boot-0.0.4-636.bin: Updated u-boot image which supports all kinds of NAND
+	chips.
+
+	zImage-ME2530-0.0.4-636: Updated linux kernel image for the ME2530.  The
+	only real differences are related to NAND flash features that are not ready
+	for prime-time yet.  However, you are urged to upgrade anyway.
+
+	zImage-LF2530-0.0.4-636: First official release of LF2530 kernel.  Supports
+	buttons.  Most of the display capabilities should work just fine.
+
+	nfsroot-0.0.4-636.tar.gz: Updated Complete Root File System for target.
+	Includes all headers necessary to build userspace apps including Brio.
+
+Please note that with this release comes a new NAND flash layout:
+
+Migrated to new NAND layout:
+	uniboot 0x0
+	u-booot-params 0x20000
+	u-boot 0x40000
+	zImage 0x80000
+	rootfs 0x400000
+	appfs 0x2000000
+
+rootfs and appfs are not in use yet, but may be in use in the near future.
+To install this distribution, take the following steps:
+
+1) On your dev host, untar the nfsroot and move it to /home/lfu/nfsroot (or
+   where ever you put your nfsroot.)
+
+2) On your dev host, move the uniboot-xxx.bin, u-boot-xxx.bin, and zImage-xxx
+   to /tftproot/uniboot.bin, /tftproot/u-boot.bin, and /tftproot/zImage.  Be
+   sure to select the proper zImage for your target.
+
+3) Fire up your board and get a u-boot prompt.  You may need to use the Magic
+   Eyes serial utility to do this as described on the wiki at:
+
+   http://leapstudio-dev.leapfrog.local:8080/display/BRIO/LF1000-Uniboot-Bootstrap-Loader
+
+4) From u-boot, tftp the images and flash them to NAND.  The commands are like
+   this:
+
+   # nand erase
+   # tftp 02000000 uniboot.bin
+   # nand write 02000000 0 20000
+   # tftp 02000000 u-boot.bin
+   # nand write 02000000 40000 20000
+   # tftp 02000000 zImage
+   # nand write 02000000 80000 100000
+
+   NOTE: If u-boot reports "bad erase blocks" at any time, your board may not
+   work.  We will work around this problem in a future release.  For now, seek
+   assistance from a fellow developer.
+
+=====================================================
+Version 0.0.3-552 14 June 2007
+=====================================================
+
+Audience: Internal Lightening Firmware Team
+Target: Magic Eyes ME2530 Board
+
+Moved header files from <linux/*> to <linux/lf1000/*>
+
+Updated to new kernel.
+
+To use this release, please update your nfsroot and flash the new kernel to
+your board.
+
+=====================================================
+Version 0.0.2-514 8 June 2007
+=====================================================
+
+Audience: Internal Lightening Firmware Team
+
+Added some driver header files that were missing from the release.
+
+=====================================================
+Version 0.0.1-508 First team-wide release 7 June 2007
+=====================================================
+
+This is the first team-wide release.  The intended audience is people on the
+firmware team who are using the Magic Eyes off-the-shelf board to develop the
+Brio framework.  It does not contain any Brio libraries or apps.  It does
+contain:
+
+-- nfsroot-0.0.1-504.tar.gz: The Complete Root File System including headers.
+   This root file system is suitable for building Brio and other apps, and also
+   for NFS mounting by the target.  It is not suitable for flashing to NAND.
+
+-- zImage-0.0.1-504: The kernel image meant to be used with this rootfs.  This
+   image should be flashed to the NAND of the board.  If you need help with
+   this, ask a fellow firmware engineer.
+
+Please note that this release does not contain a u-boot or uniboot image.  Your
+board may or may not have these two components.  See the documentation at 
+
+http://leapstudio-dev.leapfrog.local:8080/display/BRIO/LF1000-Uniboot-Bootstrap-Loader
+and
+http://leapstudio-dev.leapfrog.local:8080/display/BRIO/Using+the+Lightening+LinuxDist
+
+and ask your fellow firmware developers for help.

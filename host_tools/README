@@ -1,0 +1,96 @@
+Tools for your host PC (running Linux)
+Andrey Yurovsky <andrey@cozybit.com>
+
+##############################################################################
+# Release unpacking                                                          #
+##############################################################################
+
+unpack_release.sh -- release unpacker
+        This script asks you what board you have and, based on that, copies
+        the right images into your TFTP_PATH and the right nfsroot into your
+        ROOTFS_PATH.  It's provided for the convenience of developers 
+        installing new releases.  This script doesn't take any arguments.
+
+###############################################################################
+# Lightning bootstrap/install/setup tools                                     #
+###############################################################################
+
+Prerequsite: install python-serial
+$ sudo apt-get install python-serial
+
+lf1000_bootstrap.py -- UART-boot based bootstrap
+        This script replaces the MES-DNW utility.  It downloads a bootstrap
+        file to the hardware and then sends it a copy of u-boot, which is run
+        from SDRAM.  To use it:
+
+$ ./lf1000_bootstrap.py /dev/ttyS0 /path/to/uartboot /path/to/u-boot.bin
+
+        You may omit u-boot if you want to transfer only the bootstrap.  Set
+        the first argument according to the serial port you're using (a USB
+        dongle is typically /dev/ttyUSB0).  Set the second argument to the
+        appropriate UART Boot image for your CPU: for the MP2530F, it is
+        boot-u.nb0, for the LF1000 it is UARTBOOT.bin.  These images are 
+        checked in under LinuxDist/images and now also included with releases.
+
+        For example, to bootstrap an LF1000 board:
+
+$ ./lf1000_bootstrap.py /dev/ttyS0 uart_bootstrap/UARTBOOT.bin \
+  uart_bootstrap/u-boot-LF1000.bin
+
+        Or for an MP2530 board:
+
+$ ./mp2530_bootstrap.py /dev/ttyS0 uart_bootstrap/boot-u.nb0 \
+  uart_bootstrap/u-boot-MP2530F.bin
+
+lightning_install.py -- automated install
+        This script talks to u-boot to install images in the NAND Flash.  
+        The images must be in your tftp server's directory and your TFTP_PATH 
+        must be set correctly.  By default, image names and addresses are taken
+        from a memory map file, 'flash.map' found in the same directory as the
+        script.  They can also be specified as paramters.
+
+        To use it, boot to u-boot, close minicom (or any other serial port 
+        terminals) and, for example:
+
+$ ./lightning_install.py /dev/ttyS0
+
+        The first argument is the serial port to use.  If omitted, /dev/ttyS0
+        is assumed.  You may specify images as follows:
+
+$ ./lightning_install.py /dev/ttyS0 -e /tftpboot/lightning-boot.bin:0 \
+  /tftpboot/kernel.jffs2:200000 /tftpboot/kernel.jffs2:1200000 \
+  /tftpboot/erootfs.jffs2:400000 /tftpboot/erootfs.jffs2:1400000
+
+        Note that the addresses are in hex.
+
+        The "-e" option tells lighting_install.py to completely erase the Flash
+        before writing files.  If omitted, lightining_install.py will instead
+        only erase the areas needed to write the files rather than erasing the
+        whole chip.  Use "-e" if you want to completely 'clean up' your Flash,
+        otherwise it is OK to omit it.  Here's an example of just replacing a
+        rootfs partition:
+
+$ ./lightning_install.py /dev/ttyS0 /tftpboot/erootfs.jffs2:400000
+
+lightning_setup.sh -- automated bootstrap+install
+        This script is meant for the hardware lab techs and shouldn't be needed
+        by developers.  It just calls lightning_bootstrap and lightning_install
+        from your path and runs through a typical installation.  Provided here
+        for documentation purposes only.
+
+###############################################################################
+# USB tools                                                                   #
+###############################################################################
+
+usb -- usb compliance tests.  
+        See the README in this directory for installation and use.
+
+###############################################################################
+# uImage tools                                                                #
+###############################################################################
+
+mkimage -- This is the 'mkimage' tool from u-boot, its source is located in the
+tools directory in the u-boot sources.  mkimage creates a suitable uImage of 
+the kernel.  It is invoked by the kernel build system by running "make uImage",
+and the kernel install script uses mkimage from this location.
+

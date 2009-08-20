@@ -1,0 +1,57 @@
+How To Create an OPT NAND Image From a Tarred FAT Directory Tree
+------------------------------------------------------------------------------
+
+Robert Dowling  rdowling@leapfrog.com  12/10/2007
+
+
+Overview
+--------
+
+The "recipe-otp-nandsim.sh" script automates the process of creating
+an OPT image file, given a standard tar file.  Presumably, the tar
+file contains the directory structure of a Leapfrog Lightning (Didj)
+game cartridge.
+
+The image file, "otp.bin" is suitable for the Matrix Semiconductor
+programming board (and Windows MatrixUtilityV3 software) to program
+SanDisk OTP parts.
+
+
+Getting Ready
+-------------
+
+1) You must have "ubimkvol" installed.  If this fails
+   
+   % ubimkvol
+
+then you will need to rebuild the mtd-utils.  Grab your favorite
+version of mtd-utils-DATE.tar.gz from LinuxDist/packages/mtd-utils.
+The precompiled ubimkvol I provided is from mtd-utils-20070911.tar.gz.
+Untar and make with these lines:
+
+   % tar -zxf mtd-utils-20070911.tar.gz
+   % cd mtd-utils
+   % make WITHOUT_XATTR=1
+
+Then you will find under mtd-utils/ubi-utils a new "ubimkvol".
+
+2) You must have a modified "nandsim.ko" kernel module, either in the
+standard place for modules, or locally available.  See ReadMe.Build in
+this directory.
+
+3) You must have a single gzipped tar file with the files you wish to
+place on the OTP part.
+
+
+Using
+-----
+
+Running the script:
+
+    ./recipe-otp-nandsim your.tar.gz
+
+should create the output file "otp.bin".  The final message you should
+see is.
+
+    Successfully made otp.bin
+

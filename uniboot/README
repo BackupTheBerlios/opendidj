@@ -1,0 +1,13 @@
+To build:
+
+./install.sh
+
+Optional compile-time flags:
+
+DEBUG		-- define this to get debug printing (but makes image bigger)
+
+Using:
+
+- On LF2530 boards, hold ANY button, but L_SHOULDER, R_SHOULDER, L-DPAD or 
+  R-DPAD to boot with u-boot.  They do not exist on ME2530 "Navi" boards.
+- If a button isn't held down, Linux is booted instead.

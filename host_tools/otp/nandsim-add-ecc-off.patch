@@ -1,0 +1,48 @@
+--- nandsim.c-orig	2007-12-10 13:08:46.000000000 -0800
++++ nandsim.c	2007-12-10 13:08:20.000000000 -0800
+@@ -78,6 +78,9 @@
+ #ifndef CONFIG_NANDSIM_DBG
+ #define CONFIG_NANDSIM_DBG        0
+ #endif
++#ifndef CONFIG_NANDSIM_ECC_OFF
++#define CONFIG_NANDSIM_ECC_OFF    0
++#endif
+ 
+ static uint first_id_byte  = CONFIG_NANDSIM_FIRST_ID_BYTE;
+ static uint second_id_byte = CONFIG_NANDSIM_SECOND_ID_BYTE;
+@@ -92,6 +95,7 @@
+ static uint do_delays      = CONFIG_NANDSIM_DO_DELAYS;
+ static uint log            = CONFIG_NANDSIM_LOG;
+ static uint dbg            = CONFIG_NANDSIM_DBG;
++static uint ecc_off	   = CONFIG_NANDSIM_ECC_OFF;
+ static unsigned long parts[MAX_MTD_DEVICES];
+ static unsigned int parts_num;
+ static char *badblocks = NULL;
+@@ -115,6 +119,7 @@
+ module_param(do_delays,      uint, 0400);
+ module_param(log,            uint, 0400);
+ module_param(dbg,            uint, 0400);
++module_param(ecc_off,        uint, 0400);
+ module_param_array(parts, ulong, &parts_num, 0400);
+ module_param(badblocks,      charp, 0400);
+ module_param(weakblocks,     charp, 0400);
+@@ -137,6 +142,7 @@
+ MODULE_PARM_DESC(do_delays,      "Simulate NAND delays using busy-waits if not zero");
+ MODULE_PARM_DESC(log,            "Perform logging if not zero");
+ MODULE_PARM_DESC(dbg,            "Output debug information if not zero");
++MODULE_PARM_DESC(ecc_off,        "Disable ECC if not zero");
+ MODULE_PARM_DESC(parts,          "Partition sizes (in erase blocks) separated by commas");
+ /* Page and erase block positions for the following parameters are independent of any partitions */
+ MODULE_PARM_DESC(badblocks,      "Erase blocks that are initially marked bad, separated by commas");
+@@ -1963,7 +1969,10 @@
+ 	chip->read_buf   = ns_nand_read_buf;
+ 	chip->verify_buf = ns_nand_verify_buf;
+ 	chip->read_word  = ns_nand_read_word;
+-	chip->ecc.mode   = NAND_ECC_SOFT;
++	/* Optionally disable ECC */
++	chip->ecc.mode   = ecc_off ? NAND_ECC_NONE : NAND_ECC_SOFT;
++	NS_WARN("init: ecc.mode set to %s\n", ecc_off ? "NAND_ECC_NONE" : "NAND_ECC_SOFT");
++
+ 	/* The NAND_SKIP_BBTSCAN option is necessary for 'overridesize' */
+ 	/* and 'badblocks' parameters to work */
+ 	chip->options   |= NAND_SKIP_BBTSCAN;

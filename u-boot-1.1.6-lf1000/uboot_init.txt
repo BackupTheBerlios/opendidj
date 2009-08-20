@@ -1,0 +1,32 @@
+setenv bp_all mem=32M init=/sbin/init console=ttyS0,115200 ubi.mtd=Brio ubi.mtd=prg_Brio ubi.mtd=Cartridge ubi.mtd=EXT ubi.mtd=prg_EXT
+setenv bp_nfs rootfstype=ext2 root=/dev/nfs rw nfsroot=192.168.0.113:/home/lfu/nfsroot
+setenv bp_eth ether=10,0xf8800000,eth0 cs89x0_media=rj45 ip=192.168.0.111:192.168.0.113:192.168.0.115:255.255.255.0:lf1000:eth0:off
+setenv bp_nand rw rootflags=noatime rootfstype=jffs2
+setenv bp_base lf1000-base:128k(LF1000_uniboot)ro,896k(Atomic_Boot_Flags),1M(Manufacturing_Data),2M(Kernel0),14M(Linux_RFS0),2M(Kernel1),14M(Linux_RFS1),222M(Brio),-(EXT)
+setenv bp_cart lf1000-cart:256M(Cartridge),-(Cartridge_EXT)
+setenv bp_mfg lf1000-cart:128k(prg_LF1000_uniboot),896k(prg_Atomic_Boot_Flags),1M(prg_Manufacturing_Data),2M(prg_Kernel0),14M(prg_Linux_RFS0),2M(prg_Kernel1),14M(prg_Linux_RFS1),222M(prg_Brio),-(prg_EXT)
+setenv bootargs_1 ${bp_all} ${bp_nfs} ${bp_eth} mtdparts=${bp_base}\;${bp_cart}
+setenv bootargs_2 ${bp_all} ${bp_nfs} ${bp_eth} mtdparts=${bp_base}\;${bp_mfg}
+setenv bootargs_3 ${bp_all} ${bp_nand} ${bp_eth} mtdparts=${bp_base}\;${bp_cart}
+setenv bootargs_4 ${bp_all} ${bp_nand} ${bp_eth} mtdparts=${bp_base}\;${bp_mfg}
+setenv bootargs_5 ${bp_all} root=31:04 ${bp_nand} mtdparts=${bp_base}\;${bp_cart}
+setenv bootargs_6 ${bp_all} root=31:06 ${bp_nand} mtdparts=${bp_base}\;${bp_mfg}
+setenv 1 setenv bootargs \$\{bootargs_1\}\;tftp 02000000 uImage.nfs
+setenv 2 setenv bootargs \$\{bootargs_2\}\;tftp 02000000 uImage.nfs
+setenv 3 setenv bootargs \$\{bootargs_3\}\;tftp 02000000 uImage.nfs
+setenv 4 setenv bootargs \$\{bootargs_4\}\;tftp 02000000 uImage.nfs
+setenv 5 setenv bootargs \$\{bootargs_5\}\;chpart nand0,3\;fsload 00100000 /boot/uImage\;bootm 00100000
+setenv 6 setenv bootargs \$\{bootargs_6\}\;chpart nand0,5\;fsload 00100000 /boot/uImage\;bootm 00100000
+setenv m1 =========================
+setenv m2 Boot Options
+setenv m3 1 - TFTP Load, NFS root filesystem, standard NAND layout                                  
+setenv m4 2 - TFTP Load, NFS root filesystem, manufacturing cartridge NAND layout                   
+setenv m5 3 - TFTP Load, NAND root filesystem, standard NAND layout, Ethernet enabled               
+setenv m6 4 - TFTP Load, NAND root filesystem, manufacturing cartridge NAND layout, Ethernet enabled
+setenv m7 5 - NAND Load, NAND root filesystem (RFS0)
+setenv m8 6 - NAND Load, NAND root filesystem (RFS1)
+setenv m9 To use one of these type 'run N' at the U-Boot prompt
+setenv menu echo\;echo \$\{m1\}\;echo \$\{m2\}\;echo \$\{m1\}\;echo\;echo \$\{m3\}\;echo \$\{m4\}\;echo \$\{m5\}\;echo \$\{m6\}\;echo \$\{m7\}\;echo \$\{m8\}\;echo\;echo \$\{m9\}\;echo
+run menu
+
+

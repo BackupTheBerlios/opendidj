@@ -1,0 +1,77 @@
+This is a simple driver that maps the 3d registers to userspace using a custom
+mmap implementation.  It also has a simple userspace program that demonstrates
+how it is expected to be used.  To build it:
+
+  $ KERNELDIR=/path/to/linux/src make
+  $ make test_ga3d
+
+Now move test_ga3d and LF1000ga3d.ko over to the target.  On the target:
+
+  $ mknod /dev/ga3d c 250 0
+  $ mount -t proc proc /proc
+  $ insmod LF1000ga3d.ko 
+
+You can now read the 3d accelerator registers like so:
+
+  $ cat /proc/driver/ga3d 
+
+Note that not all registers are dumped at this time.  If you wish to see
+additional registers, you can do so in ga3d_proc.c and ga3d_hal.h.
+
+The sample program reads and writes registers in the 3d accelerator.  You can
+verify that the values that are read and written are not being cached by
+reading the driver's proc entry.  Below is a transcript of an entire session
+reading and writing the interrupt regiser (offset 0x18) in the 3d accelerator.
+It is meant to demonstrate how the program is used.  You can also inspect the
+source in test_ga3d.c for details.  Lines beginning with --- are comments that
+I added:
+
+--- First we insmod the module
+	# insmod LF1000ga3d.ko 
+	LF1000ga3d: module license 'unspecified' taints kernel.
+	ga3d: initializing
+--- now we invoke the sample program to read the 3d interrupt reg
+	# ./test_ga3d 18  
+	Register 0x18: 0x00000000
+--- mount the proc file system so we can see if the driver agrees
+	# mount -t proc proc /proc
+	# cat /proc/driver/ga3d 
+	GRP3D_CPCONTROL = 0x00000000
+	GRP3D_CMDQSTART = 0xFFFFFFF8
+	GRP3D_CMDQEND = 0xFFFFFFFC
+	GRP3D_CMDQFRONT = 0xFFFFFFFC
+	GRP3D_CMDQREAR = 0x00000000
+	GRP3D_STATUS = 0x05BF174A
+	GRP3D_INT = 0x00000000
+	GRP3D_CONTROL = 0xACCD7F00
+--- as shown above, the GRP3D_INT register is the same in both cases
+--- now attempt to write the value 0x300 to the GRP3D_INT register
+	# ./test_ga3d 18 300
+	Writing 0x300 to register 0x00000018
+	# cat /proc/driver/ga3d 
+	GRP3D_CPCONTROL = 0x00000000
+	GRP3D_CMDQSTART = 0xFFFFFFF8
+	GRP3D_CMDQEND = 0xFFFFFFFC
+	GRP3D_CMDQFRONT = 0xFFFFFFFC
+	GRP3D_CMDQREAR = 0x00000000
+	GRP3D_STATUS = 0x05BF174A
+	GRP3D_INT = 0x00000300
+	GRP3D_CONTROL = 0xACCD7F00
+	# ./test_ga3d 18    
+	Register 0x18: 0x00000300
+--- Note that the proc output agrees with the sample program
+--- Now write 0x0 back to the GRP3D_INT register
+	# ./test_ga3d 18 0
+	Writing 0x0 to register 0x00000018
+	# cat /proc/driver/ga3d 
+	GRP3D_CPCONTROL = 0x00000000
+	GRP3D_CMDQSTART = 0xFFFFFFF8
+	GRP3D_CMDQEND = 0xFFFFFFFC
+	GRP3D_CMDQFRONT = 0xFFFFFFFC
+	GRP3D_CMDQREAR = 0x00000000
+	GRP3D_STATUS = 0x05BF174A
+	GRP3D_INT = 0x00000000
+	GRP3D_CONTROL = 0xACCD7F00
+	# ./test_ga3d 18  
+	Register 0x18: 0x00000000
+--- Note that the sample program and proc output agree.

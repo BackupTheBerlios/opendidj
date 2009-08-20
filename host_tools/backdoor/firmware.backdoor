@@ -1,0 +1,107 @@
+#!/bin/sh
+
+set -e
+
+PKG=`ls /Didj/firmware-*.lfp 2>/dev/null | sort | head -1`
+
+# helper functions
+MTD_NUM=""
+name_to_mtdnum() {
+	MTD_NUM=`cat /proc/mtd  | grep -w -e \"$1\" | cut -d : -f 1 | cut -c 4-`
+	if [ "$MTD_NUM" = "" ]; then
+		echo "Failed to find proper mtd device for $1.  Failing."
+		exit 1
+	fi
+}
+
+# install file $1 in mtd device $2
+FILE_SUM=""
+flash_file() {
+	name_to_mtdnum "$2"
+	echo "Installing $1 in $2 (mtd$MTD_NUM)"
+	flash_eraseall /dev/mtd$MTD_NUM > /dev/null
+	nandwrite -p /dev/mtd$MTD_NUM $1 > /dev/null
+	FILE_SIZE=`ls -l $1 | tr -s "" " " | cut -d" " -f5`
+	FILE_SUM=`nanddump -m -l $FILE_SIZE /dev/mtd$MTD_NUM 2> /dev/null`
+}
+
+if [ "$PKG" = "" ]; then
+	echo "No firmware package found."
+	exit 0
+fi
+
+echo "Found $PKG"
+
+# Now let's decide which RFS we're booted from, and install in the other:
+CURRENT_RFS=`cat /flags/rootfs | cut -c 4-`
+
+if [ "$CURRENT_RFS" = "0" ]; then
+	FS=1
+elif [ "$CURRENT_RFS" = "1" ]; then
+	FS=0
+else
+	echo "Invalid /flags/rootfs file.  Failing to install $PKG"
+	exit 1
+fi
+
+# unzip the package to newfirmware direcotry
+rm -rf /Didj/Base/firmware-*
+PKG_DIR=/Didj/Base
+unzip $PKG -d $PKG_DIR
+PKG_DIR=`ls -d /Didj/Base/firmware-* 2>/dev/null | head -1`
+if [ "$PKG_DIR" = "" ]; then
+	echo "Failed to unzip firmware!"
+	exit 1
+fi
+
+cd $PKG_DIR
+REQUIRED_FILES="erootfs.jffs2 kernel.jffs2 erootfs.md5 kernel.md5"
+for f in $REQUIRED_FILES; do
+	if [ ! -e $f ]; then
+		echo "Can't find firmware files.  Failing."
+		exit 1
+	fi
+done
+
+# Calculate MD5 of files:
+ACTUAL_ROOT_SUM=`md5sum erootfs.jffs2 | tr -s "" " " | cut -d" " -f1`
+ACTUAL_KERNEL_SUM=`md5sum kernel.jffs2 | tr -s "" " " | cut -d" " -f1`
+EXPECTED_ROOT_SUM=`cat erootfs.md5`
+EXPECTED_KERNEL_SUM=`cat kernel.md5`
+
+if [ ! "$ACTUAL_ROOT_SUM" = "$EXPECTED_ROOT_SUM" ]; then
+	echo "erootfs file corrupted.  Failing."
+	exit 1
+fi
+
+if [ ! "$ACTUAL_KERNEL_SUM" = "$EXPECTED_KERNEL_SUM" ]; then
+	echo "kernel file corrupted.  Failing."
+	exit 1
+fi
+
+echo "Package Integrity Test Passed"
+
+# Install
+flash_file "kernel.jffs2" "Kernel$FS"
+if [ ! "$FILE_SUM" = "$EXPECTED_KERNEL_SUM" ]; then
+	echo "kernel flash failed.  Failing."
+	exit 1
+fi
+echo "Kernel install successful."
+
+flash_file "erootfs.jffs2" "Linux_RFS$FS"
+if [ ! "$FILE_SUM" = "$EXPECTED_ROOT_SUM" ]; then
+	echo "rootfs flash failed.  Failing."
+	exit 1
+fi
+echo "Rootfs install successful."
+
+# Finally, we switch to the other fs
+RFS_PREFIX=`cat /flags/rootfs | cut -c -3`
+CURRENT_FS=`cat /flags/rootfs`
+NEW_FS="$RFS_PREFIX$FS"
+echo "Switching from $CURRENT_FS to $NEW_FS"
+echo "$NEW_FS" > /flags/rootfs
+sync
+
+exit 0
