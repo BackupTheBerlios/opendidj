@@ -1,0 +1,28 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		start-stop-daemon --start --background --exec /usr/bin/launch_main
+		;;
+
+	stop)
+		# disable the power down timer
+		killmainapp
+		start-stop-daemon --stop --name launch_main
+		# display splash screen
+		display_screen PENDING_POWERDOWN_STATE
+		oss -w /var/sounds/PowerDown_32k.wav
+		;;
+
+	restart)
+		$0 stop
+		$0 start
+		;;
+	*)
+		echo "Usage: $0 {start|stop}"
+		exit 1
+		;;
+esac
+
+exit 0
+

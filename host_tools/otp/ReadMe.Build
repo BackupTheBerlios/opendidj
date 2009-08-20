@@ -1,0 +1,90 @@
+Custom Nandsim Module That Accepts ecc_off Parameter
+------------------------------------------------------------------------------
+
+Robert Dowling  rdowling@leapfrog.com  12/10/2007
+
+
+General
+-------
+
+Nandsim.ko is a kernel module that ships with Ubuntu 7.10 (Gutsy Gibbon) as
+part of MTD drivers, probably as a test for the other MTD modules.
+
+My change is to add a new "int" parameter ecc_off, that when set to 1,
+disables ECC calculations (sets ecc.mode=NAND_ECC_NONE) so that the simulator
+can be used to create OTP NAND images for Lightning (Didj) products.  By
+default, the ecc_off parameter is disabled, and nandsim operates the same as
+before.
+
+
+Motivation
+----------
+
+At the highest level, this change allows creating a FAT file system image that
+can be programed into a SanDisk OPT part, so that Lightning firmware will
+correctly recognize the FAT file system.  There is an accompanying script
+"recipe-otp-nandsim.sh" that uses this new module to do just that.
+
+For lower level motivations, read on.  The SanDisk OTP part has a "NAND
+interface", but is a one-time programmable part with guaranteed zero bad
+blocks.  As such, it is not actually a NAND, and has no "spare area" or OOB
+region.
+
+The MTD NAND driver suite recognized the part from its manufacturing ID as a
+Toshiba part, but incorrectly assumes it has an OOB data region.
+
+In order to make the part work correctly with the MTD UBI layer which allows a
+FAT file system to placed on the part, the ECC must be disabled.  Simply
+modifying the MTD description to have zero OOB data was not sufficient, and in
+fact, not even necessary.
+
+
+Source
+------
+
+The original nandsim driver is shipped as part of the kernel source, and
+resides in
+
+    /usr/src/linux-source-2.6.22/drivers/mtd/nand/nandsim.c
+
+My new nandsim.c is a drop-in replacement (ha!) for the existing nandsim.c
+
+
+Pre-Built Module
+----------------
+
+I've built a nandsim.ko and left it in this directory.  The
+"recipe-otp-nandsim.sh" script is by default configured to use this local copy
+of nandsim.ko.  (See local=1 in recipe-otp-nandsim.sh).
+
+
+Building Module
+---------------
+
+In order to make the module, you (might) need to install the kernel source
+and, patch or replace nandsim.c with the modified one, and remake the kernel
+modules.  Sorry I don't more about this process.
+
+       # Install the source
+       sudo apt-get install linux-source
+       cd /usr/src
+       sudo tar -jxf linxu-source-2.6.22.tar.bz2
+       cd linux-source-2.6.22
+       sudo cp /boot/config-`uname -r` .config
+
+       # Patch or copy over nandsim.c here...
+       cp drivers/mtd/nand/nandsim.c drivers/mtd/nand/nandsim.c-orig
+       cp path/to/new/nandsim.c drivers/mtd/nand/nandsim.c
+
+       # Make the module
+       sudo make
+       sudo make modules
+
+       # Optionally install the module, destroying the original.
+       sudo make modules_install
+
+
+Using Module
+------------
+
+See the document ReadMe.Using and the "recipe-otp-nandsim.sh" script.

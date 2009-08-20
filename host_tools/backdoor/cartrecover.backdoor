@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+MTD=`cat /proc/mtd | grep \"Cartridge\" | cut -d : -f 1`
+if [ "$MTD" = "" ]; then
+	echo "No Cartridge Found"
+	exit 0
+fi
+
+flash_eraseall /dev/$MTD
+

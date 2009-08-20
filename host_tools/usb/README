@@ -1,0 +1,31 @@
+LF1000 USB Testing
+
+Introduction
+------------
+
+See http://www.linux-usb.org/usbtest/index.html#gadgets for info on testing.
+
+testusb.c comes from http://www.linux-usb.org/usbtest/testusb.c
+
+test.sh comes from http://www.linux-usb.org/usbtest/test.sh
+
+Building
+--------
+
+These tests are run on the USB host to test our USB device.  The device must be
+built with the zero gadget as opposed to mass storage or something else.  So,
+you can not run these tests with the default release configuration.  The host
+must be a linux host with the usbtest driver available.  My default Ubuntu
+system has this natively.  The test program is testusb.c.  Build and install
+testusb and testusb_all in $PREFIX/bin by running ./install.sh
+
+Running
+-------
+
+Plug in the target over USB.  Run individual tests by plug
+
+   $ testusb -a -t9 -c 100
+
+Run all the tests like this:
+
+   $ testusb_all

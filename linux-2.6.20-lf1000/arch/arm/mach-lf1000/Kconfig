@@ -1,0 +1,54 @@
+menu "LF1000 platform type"
+	depends on ARCH_LF1000
+
+choice
+	prompt "Leap Frog development board"
+	default MACH_ME_MP2530F
+
+config MACH_ME_MP2530F
+	bool "Support Magic Eyes platform               ( ME board / MP2530F cpu)"
+	help
+	  Include support for the Magic Eyes platform( ME board / MP2530F cpu).
+
+config MACH_LF_MP2530F
+	bool "Support Leap Frog(R) LF1000 platform( LF board / MP2530F cpu)"
+	help
+	  Include support for the Leap Frog(R) LF1000 platform( LF board / MP2530F cpu).
+
+config MACH_ME_LF1000
+	bool "Support Magic Eyes platform               ( ME board / LF1000  cpu)"
+	help
+	  Include support for the Magic Eyes platform( ME board / LF1000  cpu).
+
+config MACH_LF_LF1000
+	bool "Support Leap Frog(R) LF1000 platform( LF board / LF1000  cpu)"
+	help
+	  Include support for the Leap Frog(R) LF1000 platform( LF board / LF1000  cpu).
+
+endchoice
+
+endmenu
+
+config LF1000_GPIO
+       tristate "Device driver for LF1000 General Purpose IO"
+       depends on ARCH_LF1000
+       ---help---
+       This option enables device driver support for LF1000 General Purpose IO. If unsure, say Y.
+
+config LF1000_GPIO_DEBUG
+	bool "Debugging for LF1000 General Purpose IO Driver"
+	depends on ARCH_LF1000 && LF1000_GPIO
+	default n
+	---help---
+	This option enables additional debugging for the LF1000 GPIO Driver.
+	If unsure, say N.
+
+config LF1000_BOOT_PARAMS_ADDR
+	hex "Address where kernel finds its boot parameters"
+	depends on ARCH_LF1000
+	default 0x00003000
+	---help---
+	Sets option sets the address where the kernel expects to find its boot
+	parameters at initialization time.  They are placed there by the 
+	bootstrap loader.  Only change this if you know what you're doing (and
+	are recompiling and bootloader as well)!

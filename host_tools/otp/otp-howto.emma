@@ -1,0 +1,127 @@
+OPT (ROM) How To
+
+h1. Overview
+
+This document describes how to convert a game or any content (including upgrades) that is runs on a NAND cartridge into an OPT (or ROM) cartridge that will function identically on a Didj base unit.
+
+There are potentially two steps to the OTP creation process: conversion and burning.  The *conversion* process accepts a single file (.tar.gz, or .zip or .lfp) which contains all the files that we want to appear on the cartridge.  It massages the data to create a new file, the raw binary image (.bin) suitable for burning into the OTP.  The *burning* process places the binary image (.bin) file into the OTP chip which is then soldered by the Lab onto a printed-circuit board and then encased in plastic to produce a final cartridge.
+
+----
+
+h1. For Conversion: Creating an OTP Image From a Zip File 
+
+h2. Requirements
+
+# PC running Native (not VMWare) Ubuntu Linux (Version 7.10 "Gutsy Gibbon" kernel 2.6.22-14).
+(!) This is tested as NOT working with the "Feisty Fawn" 7.04 Ubuntu kernel 2.6.20-15 (!)
+# OTP conversion software
+# Input file: gzipped tar file (.tar.gz), zip (.zip) or leapfrog package (.lfp) with entire content suitable for NAND cartridge 
+
+h2. Installing OTP conversion software
+
+# Make sure the {{mtd-tools}} package is installed on your Ubuntu pc:
+{noformat}
+sudo apt-get install mtd-tools
+{noformat}
+# Fetch the entire {{otp}} directory from the SVN server: http://source.leapfrog.com/Software/Brio/Brio2/LinuxDist/host_tools/otp
+{noformat}
+cd ~ # could be anywhere...
+svn co http://source.leapfrog.com/Software/Brio/Brio2/LinuxDist/host_tools/otp
+# This will create an opt directory under ~
+{noformat}
+|| File || Description ||
+| ReadMe.Build | How to rebuild nandsim.ko, if needed |
+| ReadMe.Using | Essentially, an early version of this document |
+| nandsim-add-ecc-off.patch | Used to make with a newer kernel then Ubuntu 7.10 |
+| nandsim.c | Modified kernel source | 
+| nandsim.c-orig | Original kernel source |
+| nandsim.ko | Compiled kernel module, ready for Ubuntu 7.10 kernel 2.6.22-14 |
+| mkotp.sh | Script to make OPT image |
+| ubimkvol | Needed by mkotp.sh script above |
+# See if it just works by skipping ahead to Creating the Image.  If not, perform kernel rebuild steps below
+
+h2. Rebuilding Kernel
+
+_This should not be needed, but just in case..._
+
+# Read this document on [building the tool|^ReadMe.Build.txt], and possibly this document on [running the tool|^ReadMe.Using.txt].
+# Install kernel source from Ubuntu
+{noformat}
+sudo apt-get install linux-source
+{noformat}
+
+# Create new nandsim.c from patch
+{noformat}
+cd /usr/src/linux-source-2.6.*/drivers/mtd/nand
+sudo patch -p0 < ~/otp/nandsim-add-ecc-off.patch
+{noformat}
+# Build kernel
+{noformat}
+cd /usr/src/linux-source-2.6.*/
+sudo make
+sudo make modules
+# Optionally install the module, destroying the original.
+sudo make modules_install
+{noformat}
+
+h2. Creating the Image
+
+# Run {{mkotp.sh}} script, specifying a part size in MB (32 or 64), and input file (.zip, .lfp or .tar.gz) and optionally an output file.
+{noformat}
+./mkotp.sh 64 /path/to/MyGame.zip MyGame.bin
+{noformat}
+You should see output like this:
+{noformat}
+Configured for 64MB part
+Using local nandsim.ko
+Unzipping /path/to/MyGame.zip...  This can take a few seconds...
+3008 files extracted
+ 
+=================
+SUCCESSFULLY made MyGame.bin
+{noformat}
+# The output file ({{MyGame.bin}} in the example) is ready for burning and should be exactly 32554432 or 67108864 long.
+{noformat}
+ls -l MyGame.bin
+-rw-r--r-- 1 root root  67108864 2008-02-06 14:19 MyGame.bin
+{noformat}
+
+----
+
+h1. For Burning: Writing the OTP Image to a Chip and Assembling a Cartridge.
+
+Ultimately, this step will be performed by the OPT vendor, but we are able to do this in-house now.  This allows us to get quick
+turn-around for experiments.
+
+h2. Requirements
+
+# PC running Native Windows
+# Matrix Utility V3 software installed
+# Matrix Semiconductor USB programmer board rev 2 {{image}}
+# USB Cable
+# OTP chips (not mounted on circuit board yet), one or more. {{image}}
+# Input file: 32 or 64MB .bin file produced by steps above.
+
+h2. Installing the Matrix Utility V3 software
+
+# Here is [The Matrix Utility V3 software|^MatrixUtilityV3_02_00.zip].  And here is a [document describing its use|^MatrixUtility.doc].
+# Attach the _Matrix Semiconductor USB programmer board_ to your windows PC and fire up the _Matrix Utility V3_.
+#* The only magic you will need is to be sure to click on the *USB* radio button, under *I/O Device* in the middle of the right side of the screen.
+# Place a blank OTP in the socket with pin 1 in the very far corner of the green board. (There is a little white arrow silk-screened on the board indicating pin 1.)
+# Just for certainty, check the part by clicking on *Read ID* button.
+#* (!) If you see "Target Device Not Found(-1)" you probably forgot to select USB in step 3.
+#* Output should look like
+{noformat}
+Reading Device ID
+----------------------------
+0x98
+0x75
+0x00
+0xFF
+0x98
+0x75
+{noformat}
+Only the first two bytes matter.  0x98 is Toshiba.  0x75 is 32MB part.  A 64MB part will show 0x76.
+# Select your .bin file: Either *File/Open* or click on the folders button in the upper left hand corner.
+# Press *Start* button and wait a few minutes.  You might see blinking lights on the green board, and eventually you will see in the lower message window that part was verified by burner _twice_.  Both verifies should pass.
+# Assemble the part onto a printed circuit board and wrap with the appropriate plastics.

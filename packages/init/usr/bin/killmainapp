@@ -1,0 +1,19 @@
+#!/bin/sh
+
+MAIN_APP=''
+MAIN_PID=''
+if [ -e /tmp/main_app_name ]; then
+	MAIN_APP=`cat /tmp/main_app_name`
+fi
+
+if [ "$MAIN_APP" != "" ]; then
+	MAIN_PID=`pidof $MAIN_APP`
+	killall $MAIN_APP
+elif [ -e /tmp/main_app_pid ]; then
+	MAIN_PID=`cat /tmp/main_app_pid`
+	kill $MAIN_PID
+fi
+
+if [ "$MAIN_PID" != "" -a -e /proc/$MAIN_PID/exe ]; then
+	kill -15 $MAIN_PID > /dev/null
+fi

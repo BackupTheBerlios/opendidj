@@ -1,0 +1,106 @@
+This is an overview of the LF1000, MP2530F, and ME_LF1000 Development Board 
+-specific changes/additions to the 2.6.20 kernel tree.
+
+Andrey Yurovsky <andrey@cozybit.com>
+
+############
+# includes #
+############
+
+include/asm-arm/arch-lf1000
+	Platform includes.  Modeled after include/asm/arch-versatile.  
+	Contains various LF1000-specific APIs.
+
+include/linux/lf1000
+	Various ioctls for drivers with custom char devices, for user space.
+
+########
+# arch #
+########
+
+arch/arm/configs/lf1000_defconfig
+	ME_LF1000 board default configuration.
+
+arch/arm/mach-lf1000/core.c
+arch/arm/mach-lf1000/clock.c
+arch/arm/mach-lf1000/lf1000.c
+	Main platform code (platform devices, IRQ table, clock init., etc). 
+	Needs some cleanup.  Modeled after arch/arm/mach-versatile
+
+arch/arm/mach-lf1000/gpio_main.c
+arch/arm/mach-lf1000/gpio.c
+	Platform GPIO driver with char device.
+
+###########
+# drivers #
+###########
+
+drivers/hwmon/lf1000_power.c
+	Power monitoring / management.  Could be more generic.
+
+drivers/i2c/bus/i2c-lf1000.c
+	I2C bus driver using normal kernel i2c API.
+
+drivers/input/keyboard/lf1000-keypad.c
+	Keyboard driver for the LF1000, with map for buttons on the ME_LF1000 
+	and LF_LF1000 boards.
+
+drivers/lf1000/adc
+	ADC driver.
+
+drivers/lf1000/buttons
+	Custom 'buttons' driver for LeapFrog application layer via char device.
+	No longer used.
+
+drivers/lf1000/dmatest
+	Test and example code for making use of the DMA.  Not intended to be
+	built/used in a normal system.
+
+drivers/lf1000/dpc
+	Display Controller (and related functionality) portion of the graphics
+	driver.  Works along with the MLC driver to provide LCD support.  Has
+	some specific support for the ILI9322 LCD controller.  TV-out isn't
+	supported at this time.
+
+drivers/lf1000/ga3d
+	Provides memory mapping and character device for use with the MagicEyes
+	proprietary 3D library in user space.
+
+drivers/lf1000/i2s
+	OSS audio driver via I2S with Cirrus Logic codec support for the 
+	Development Board.
+
+drivers/lf1000/mlc
+	Multi-Layer Controller portion of the graphics driver.  Normally a
+	frame buffer driver in drivers/video would be used.
+
+drivers/lf1000/spi
+	SPI driver.  Should be integrated in a more generic way in drivers/spi
+
+drivers/lf1000/pwm
+	Pulse Width Modulator.  
+
+drivers/mmc/lf1000_mmc.c
+	Skeleton of MMC driver, to be completed.  Preferably we can find out
+	what Samsung core is in this and then reuse an existing driver, if one
+	is available.
+
+drivers/mtd/nand/lf1000.c
+drivers/mtd/nand/lf1000_ecc.c
+	NAND Flash controller, with additional support for dealing with 
+	'cartridges' on the J14/J15 connectors.  Hardware ECC not fully 
+	implemented at this time.
+
+drivers/mtd/ubi
+	UBI, back-ported from the 2.6.22 tree.
+
+drivers/net/cs89x0.c
+	CS9800 Ethernet controller.  Patched for ME_LF1000 Development board
+	support.  May need some cleanup.
+
+drivers/serial/8250-lf1000.c
+	UART support.  The LF1000's UART is very similar to the '8250, so the
+	driver is based on that.
+
+drivers/usb/gadget/lf1000_udc.c
+	USB client controller.
