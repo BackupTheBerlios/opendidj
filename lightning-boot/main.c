@@ -34,6 +34,10 @@
 #include "include/clock.h"
 #include "include/gpio.h"
 #include "include/adc.h"
+#include "include/timer.h"
+#include "include/xmodem/xmodem.h"
+#include "include/fbcon.h"
+#include "include/fbuffer.h"
 
 /* buffers */
 #define FS_BUFFER_SIZE	BOOT_SIZE
@@ -42,6 +46,7 @@ static u32 sum_buffer[NAND_EB_SIZE/sizeof(u32)];
 
 #define PARAMS_LEN	(1024/4)
 static u32 *params_buffer = (u32 *)CONFIG_LF1000_BOOT_PARAMS_ADDR;
+u32 offset = 0;
 
 /* USB controller */
 #define UDC_PCR		0x52	/* PCR register offset */
@@ -54,6 +59,30 @@ static u32 *params_buffer = (u32 *)CONFIG_LF1000_BOOT_PARAMS_ADDR;
                 (((u32)(x) & (u32)0x0000FF00UL)<<8) |	\
                 (((u32)(x) & (u32)0x00FF0000UL)>>8) |	\
                 (((u32)(x) & (u32)0xFF000000UL)>>24)))
+
+void fbcopy (int *data)
+{
+
+	if (offset == 0)
+		memcpy ((void *)(FRAME_BUFFER_ADDR + 128),(void *)data,128);
+	else
+		memcpy ((void *)(FRAME_BUFFER_ADDR + (128 +(offset * 128))),(void *)data,128);
+	
+	offset ++;
+	return;
+}
+
+void ubcopy (int *data,int size)
+{
+	renderString(20,29,"XModem transfer progress:");
+	renderHexU32(45,29,(u32)offset);
+	
+	memcpy ((void *)(UBOOT_ADDR + offset),(void *)data,size);
+	
+	offset += size;
+	return;
+}
+
 
 /*
  * Die in case of unrecoverable error.  On LF1000, we pull the power off. 
@@ -272,6 +301,8 @@ void main(void)
 	char *cmdline = 0, *altcmdline = 0;
 	u32 kernel_nand_addr = 0, alt_kernel_nand_addr = 0;
 	int board_id;
+	int done = 0;
+	u32 ret = 0;
 
 #ifdef CPU_LF1000
 	/* disable the USB controller */
@@ -280,9 +311,20 @@ void main(void)
 	adc_init();
 	board_id = load_board_id();
 	display_backlight(board_id);
+	bootstrap();
 	clock_init();
 	db_init();
-	db_puts("lightning-boot 1.0\n");
+	display_init();
+	fbcon_init();
+	db_displaytee(1);
+	
+	db_puts("************************************************\n");
+	db_puts("*                                              *\n");
+	db_puts("* OpenDidj lightning-boot 1.1  /  23 Feb 2010  *\n");
+	db_puts("*                                              *\n");
+	db_puts("************************************************\n");
+	db_puts("\n\n");
+	
 
 #ifdef CONFIG_MACH_LF_LF1000
 	/* now that backlight is on, see if we have enough battery to boot */
@@ -293,9 +335,20 @@ void main(void)
 	}
 #endif /* CONFIG_MACH_LF_LF1000 */
 #ifdef UBOOT_SUPPORT
-	if(((REG32(LF1000_GPIO_BASE+GPIOCPAD) & BUTTON_MSK) != BUTTON_MSK)) {
+	if(((REG32(LF1000_GPIO_BASE+GPIOCPAD) & BUTTON_MSK) == BUTTON_MSK)) {
 		do {
-			db_puts("u-boot mode\n");
+			db_puts("xmodem download mode\n");
+			//bootstrap();
+			timer_init();
+			offset = 0;
+			xmodemInit(db_putchar,db_getc_async);
+			tmr_poll_start(2000);
+			db_puts("Switch to 115200 baud and press any button\n");
+			db_puts("to start XModem download...\n");
+	/* set the baud rate */
+#define UART16(r)       REG16(LF1000_SYS_UART_BASE+r)
+	UART16(BRD) = 1; /* FIXME (for now "1"  sets 115200 baud , "11" sets 19200 baud) */
+	UART16(UARTCLKGEN) = ((UARTDIV-1)<<UARTCLKDIV)|(UART_PLL<<UARTCLKSRCSEL);
 			if(tfs_load_summary(sum_buffer, BOOT0_ADDR) != 0) {
 				db_puts("trying BOOT1\n");
 				if(tfs_load_summary(sum_buffer, BOOT1_ADDR)) {
@@ -303,11 +356,37 @@ void main(void)
 					break;
 				}
 			}
-			if(tfs_load_file("u-boot.bin", (u32 *)UBOOT_ADDR)) {
-				db_puts("failed to load u-boot.bin\n");
-				break;
+			while (!done)
+			{			
+				if (tmr_poll_has_expired()){
+					if(((REG32(LF1000_GPIO_BASE+GPIOCPAD) & BUTTON_MSK) != BUTTON_MSK)) 
+					{
+						db_displaytee(0);
+						ret = xmodemReceive(ubcopy);
+						db_displaytee(1);
+						if ( ret >= 0 ) break;
+					}
+					if (ret == -1) 
+					db_puts("XMODEM_ERROR : REMOTECANCEL\n");
+					
+					if (ret == -2)
+					db_puts("XMODEM_ERROR : OUTOFSYNC\n");
+					
+					if (ret == -3)
+					db_puts("XMODEM_ERROR : RETRYEXCEED\n");
+					if ( ret < 0 ) continue;
+	
+					/*		
+					db_puts("Loaded : ");
+					db_int(ret);
+					db_puts("bytes\n");
+					*/
+					}
 			}
-
+			
+			db_puts("\n\nXModem download complete.\n");
+			db_puts("Transferring control to U-Boot.\n");
+		
 			/* jump to u-boot */
 			((void (*)( int r0, int r1, int r2))UBOOT_ADDR) 
 				(0, MACH_TYPE_LF1000, 0);
@@ -443,6 +522,7 @@ void main(void)
 
 #ifdef DISPLAY_SUPPORT
 	db_stopwatch_start("SPLASH");
+	db_puts("Loading bootsplash\n");
 	tfs_load_file("bootsplash.rgb", (u32 *)FRAME_BUFFER_ADDR);
 	display_init();
 	db_stopwatch_stop();

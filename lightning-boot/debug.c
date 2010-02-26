@@ -9,7 +9,7 @@
  * published by the Free Software Foundation.
  */
 
-#include "autoconf.h"
+#include "include/autoconf.h"
 #include <platform.h>
 #include <common.h>
 #include <uart.h>
@@ -27,9 +27,13 @@
 const char *db_stopwatch;
 #endif
 
+u8 display_tee;
+
 void db_init(void)
 {
 	u32 tmp;
+
+	display_tee = 0;
 
 	/* GPIO setup, as needed */
 
@@ -52,9 +56,15 @@ void db_init(void)
 
 	/* enable polling/IRQ transmit, leave receive disabled */
 	UART16(UCON) = (1<<TRANS_MODE)|(1<<RECEIVE_MODE);
+	
+	/* reset the FIFOs */
+	REG16(LF1000_SYS_UART_BASE+FCON)=(1<<TX_FIFO_RESET)|(1<<RX_FIFO_RESET);
+	
+	/* TODO: do we need this? */
+	REG16(LF1000_SYS_UART_BASE+MCON) = (1<<SCRXENB);
 
 	/* set the baud rate */
-	UART16(BRD) = 1; /* FIXME (for now this sets 115200 baud) */
+	UART16(BRD) = 11; /* FIXME (for now "1"  sets 115200 baud , "11" sets 19200 baud) */
 	UART16(UARTCLKGEN) = ((UARTDIV-1)<<UARTCLKDIV)|(UART_PLL<<UARTCLKSRCSEL);
 
 #if defined DEBUG && defined DEBUG_STOPWATCH
@@ -63,12 +73,43 @@ void db_init(void)
 }
 
 #ifdef DEBUG
+void db_displaytee(int v) {
+	display_tee = (v!=0);
+}
+
 void db_putchar(char c)
 {
 	if(c == '\n')
 		db_putchar('\r');
 	while(IS_CLR(UART16(TRSTATUS), TRANSMIT_BUFFER_EMPTY));
 	UART8(THB) = c;
+	if ( display_tee ) {
+		console_putch(c);
+	}
+}
+
+int db_tstc (void)
+{
+	return (REG16(LF1000_SYS_UART_BASE+FSTATUS) & 0xF);
+}
+
+int db_getc (void)
+{
+	unsigned char byte;
+	while(!db_tstc());
+	byte = UART8(RHB);
+	//(REG16(LF1000_SYS_UART_BASE+RHB));
+	//return REG16(LF1000_SYS_UART_BASE+RHB);
+	//db_putchar (byte);
+	return byte;
+}
+
+int db_getc_async(void)
+{
+	unsigned char byte;
+	if ( !db_tstc() ) return -1;
+	byte = UART8(RHB);
+	return byte;
 }
 
 void db_puts(const char *s)

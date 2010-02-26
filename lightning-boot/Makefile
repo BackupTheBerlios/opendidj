@@ -1,35 +1,22 @@
-CROSS_COMPILE ?= arm-linux-uclibc-
-CFLAGS =-std=gnu99 -mcpu=arm926ej-s -mlittle-endian -msoft-float -ffreestanding -Os -Wall -pedantic -D_LF1000_BOOTLOADER -DSELF_BOOTSTRAP
-#CFLAGS =-std=gnu99 -mcpu=arm926ej-s -mlittle-endian -msoft-float -ffreestanding -Os -Wall -pedantic -D_LF1000_BOOTLOADER
+CROSS_COMPILE ?= arm-elf-
+CFLAGS = -std=gnu99 -mcpu=arm926ej-s -mlittle-endian -msoft-float -ffreestanding -Os -Wall -pedantic -D_LF1000_BOOTLOADER 
 LDFLAGS = -static --architecture armv5te -EL -M -Map lightning-boot.map -e StartUp -T lightning.lds
 
-ifneq ($(KERNELDIR),)
-CFLAGS += -I$(KERNELDIR)/include/asm/arch -I$(KERNELDIR)/include/linux
-endif
+#-std=gnu99
 
-# build NFS booting support for the development boards (but not for the Form
-# Factor / final boards as they don't have Ethernet)
-ifneq ($(TARGET_MACH),LF_LF1000)
-CFLAGS += -DNFS_SUPPORT
-endif
+CFLAGS += -Iinclude/arch-lf1000
 
 # debug printing support
-ifneq ($(DEBUG),)
 CFLAGS += -DDEBUG
-endif
 
 # debug stopwatch support
-ifneq ($(DEBUG_STOPWATCH),)
 CFLAGS += -DDEBUG_STOPWATCH
-endif
 
 # u-boot bootloader support
-ifeq ($(UBOOT_SUPPORT),1)
 CFLAGS += -DUBOOT_SUPPORT
-endif
 
 OBJS = startup.o bootstrap.o nand.o jffs2.o crc32.o string.o gpio.o debug.o \
-       timer.o tfs.o adc.o
+       timer.o tfs.o adc.o xmodem.o fbuffer.o fbcon.o font.o
 
 # Boot Splash Screen support
 CFLAGS += -DDISPLAY_SUPPORT -DDISPLAY_BACKLIGHT_PWM
@@ -48,8 +35,11 @@ all: $(OBJS)
 	$(CROSS_COMPILE)gcc $(CFLAGS) -c main.c
 	$(CROSS_COMPILE)ld $(LDFLAGS) $(OBJS) main.o -o lightning-boot
 	$(CROSS_COMPILE)objcopy -S -I elf32-littlearm -O binary lightning-boot lightning-boot.bin
-	$(CROSS_COMPILE)objdump -D -b binary -EL -m armv5te lightning-boot.bin > lightning-boot.dis
-	du --apparent-size -b lightning-boot.bin
+	# $(CROSS_COMPILE)objdump -D -b binary -EL -m armv5te lightning-boot.bin > lightning-boot.dis
+	@echo
+	@$(CROSS_COMPILE)size --target=binary lightning-boot.bin
+	@echo
+	@$(CROSS_COMPILE)objcopy --gap-fill 0xff --pad-to 0x4000 -S -I elf32-littlearm -O binary lightning-boot lightning-boot.bin
 
 startup.o: startup.S
 	$(CROSS_COMPILE)gcc $(CFLAGS) -Wa,--defsym,StartUp=0x0000 -c startup.S
@@ -57,9 +47,21 @@ startup.o: startup.S
 %.o:
 	$(CROSS_COMPILE)gcc $(CFLAGS) -c $*.c
 
-install: all
-	cp lightning-boot.bin /tftpboot/
-
 clean:
-	rm -f *.o *.bin *.dis *.map lightning-boot $(LINUX_FILES)
-
+	rm -f *.o *.bin *.dis *.map lightning-boot
+	
+program:
+	@echo Switch the DIDJ now on , hold the button until the backlight starts...
+	#@sleep 1
+	@echo 3
+	#@sleep 1
+	@echo 2
+	#@sleep 1
+	@echo 1
+	#@sleep 1
+	@echo 0
+	@mode com2 BAUD=19200 PARITY=N DATA=8 STOP=1
+	@echo Sending lightning-boot to didj ...
+	@copy /b lightning-boot.bin com2
+	@echo ..finish!
+ 

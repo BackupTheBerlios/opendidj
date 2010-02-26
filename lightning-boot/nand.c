@@ -15,7 +15,7 @@
  * Note: On the MP2530F CPU, the ECC functionality is disabled.
  */
 
-#include "autoconf.h"
+#include "include/autoconf.h"
 #include <platform.h>
 #include <common.h>
 #include <nand.h>

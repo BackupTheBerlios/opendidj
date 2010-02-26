@@ -42,11 +42,12 @@ cp $LINUX_DRIVERS/pwm/pwm_hal.h ./include/
 
 UBOOT_SUPPORT=$UBOOTLOADERS KERNELDIR=$KERNELDIR CROSS_COMPILE=$CROSS_COMPILE make 
 
-echo "" >> lightning-boot.bin
+# echo "" >> lightning-boot.bin
 VERSION=`grep "CURRENT_MAJOR_VERSION=" ../packages/version/install.sh | cut -d = -f 2`
-BUILD=`svn info $PROJECT_PATH | grep Revision | awk '{print $2}'`
-echo "VERSION:$VERSION.$BUILD" >> lightning-boot.bin
-echo "" >> lightning-boot.bin
+# BUILD=`svn info $PROJECT_PATH | grep Revision | awk '{print $2}'`
+# BUILD=1337
+# echo "VERSION:$VERSION.$BUILD" >> lightning-boot.bin
+# echo "" >> lightning-boot.bin
 
 cp lightning-boot.bin $TFTP_PATH/
 
