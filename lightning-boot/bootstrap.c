@@ -43,7 +43,7 @@ void bootstrap(void)
 	 *       JTAG. */
 #ifdef SELF_BOOTSTRAP
 	/* load the rest of the 128K boot sector (hardware loaded 2K) */
-	nand_read((u32 *)BOOTSTRAP_SIZE, BOOTSTRAP_SIZE, 
-			BOOT_SECTOR_SIZE-BOOTSTRAP_SIZE);
+//	nand_read((u32 *)BOOTSTRAP_SIZE, BOOTSTRAP_SIZE, 
+//			BOOT_SECTOR_SIZE-BOOTSTRAP_SIZE);
 #endif
 }

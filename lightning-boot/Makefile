@@ -1,10 +1,13 @@
 CROSS_COMPILE ?= arm-elf-
-CFLAGS = -std=gnu99 -mcpu=arm926ej-s -mlittle-endian -msoft-float -ffreestanding -Os -Wall -pedantic -D_LF1000_BOOTLOADER 
+CFLAGS = -std=gnu99 -mcpu=arm926ej-s -mlittle-endian -msoft-float -ffreestanding -Os -Wall -pedantic -D_LF1000_BOOTLOADER
 LDFLAGS = -static --architecture armv5te -EL -M -Map lightning-boot.map -e StartUp -T lightning.lds
 
 #-std=gnu99
 
 CFLAGS += -Iinclude/arch-lf1000
+
+# Self-bootstrap
+CFLAGS += -DSELF_BOOTSTRAP
 
 # debug printing support
 CFLAGS += -DDEBUG

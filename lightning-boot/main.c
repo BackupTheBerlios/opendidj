@@ -46,7 +46,7 @@ static u32 sum_buffer[NAND_EB_SIZE/sizeof(u32)];
 
 #define PARAMS_LEN	(1024/4)
 static u32 *params_buffer = (u32 *)CONFIG_LF1000_BOOT_PARAMS_ADDR;
-u32 offset = 0;
+static u32 offset = 0;
 
 /* USB controller */
 #define UDC_PCR		0x52	/* PCR register offset */
@@ -311,7 +311,6 @@ void main(void)
 	adc_init();
 	board_id = load_board_id();
 	display_backlight(board_id);
-	bootstrap();
 	clock_init();
 	db_init();
 	display_init();
@@ -320,7 +319,7 @@ void main(void)
 	
 	db_puts("************************************************\n");
 	db_puts("*                                              *\n");
-	db_puts("* OpenDidj lightning-boot 1.1  /  23 Feb 2010  *\n");
+	db_puts("* OpenDidj lightning-boot 1.1  /  12 Mar 2010  *\n");
 	db_puts("*                                              *\n");
 	db_puts("************************************************\n");
 	db_puts("\n\n");
@@ -338,7 +337,6 @@ void main(void)
 	if(((REG32(LF1000_GPIO_BASE+GPIOCPAD) & BUTTON_MSK) == BUTTON_MSK)) {
 		do {
 			db_puts("xmodem download mode\n");
-			//bootstrap();
 			timer_init();
 			offset = 0;
 			xmodemInit(db_putchar,db_getc_async);
